@@ -1,0 +1,16 @@
+[package]
+name = "ghast"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sqlx = { version = "0.8", features = [ "runtime-tokio", "sqlite" ] }
+tokio = { version = "1.46.1", features = ["fs", "io-std", "io-util", "rt-multi-thread", "sync", "signal", "macros"] }
+log = "0.4.27"
+uuid = { version = "1.16.0", features = ["v4"] }
+chrono = "0.4.41"
+rocket = { version = "0.5.1", features = ["json"] }
+serde = { version = "1.0.219", features = ["derive"] }
+reqwest = { version = "0.12.22", features = ["json"] }
+moka = { version = "0.12.10", features = ["future"] }
+rocket_cors = "0.6.0"
