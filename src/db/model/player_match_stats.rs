@@ -16,5 +16,7 @@ pub struct PlayerFootballStats {
     pub catches: u32,
     pub strips: u32,
     pub touchdowns: u32,
-    pub touchdown_passes: u32
+    pub touchdown_passes: u32,
+    pub passing_blocks: f32,
+    pub receive_blocks: f32
 }

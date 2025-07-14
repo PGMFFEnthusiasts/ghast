@@ -9,5 +9,7 @@ pub struct MatchData {
     pub team_one_score: u32,
     pub team_two_score: u32,
     pub map: String,
-    pub is_tourney: bool
+    pub is_tourney: bool,
+    pub team_one_name: String,
+    pub team_two_name: String
 }

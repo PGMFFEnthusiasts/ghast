@@ -23,8 +23,8 @@ impl Database {
         &self, id: u32
     ) -> Option<MatchData> {
         let result = sqlx::query!(r#"
-SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map, is_tourney FROM
-match_data WHERE match = ?1
+SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map, is_tourney,
+team_one_name, team_two_name FROM match_data WHERE match = ?1
         "#, id)
             .fetch_all(&self.connection_pool).await;
         match result {
@@ -42,6 +42,8 @@ match_data WHERE match = ?1
                     team_two_score: record.team_two_score as u32,
                     map: record.map,
                     is_tourney: record.is_tourney == 1i64,
+                    team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
+                    team_two_name: record.team_two_name.unwrap_or(String::from("Unknown"))
                 })
             }
             Err(e) => {
@@ -57,8 +59,8 @@ match_data WHERE match = ?1
         let start_time_millis = start_time.timestamp_millis();
         let end_time_millis = end_time.timestamp_millis();
         let result = sqlx::query!(r#"
-SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map, is_tourney FROM
-match_data WHERE start_time >= ?1 AND start_time <= ?2
+SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map,
+is_tourney, team_one_name, team_two_name FROM match_data WHERE start_time >= ?1 AND start_time <= ?2
         "#, start_time_millis, end_time_millis)
             .fetch_all(&self.connection_pool).await;
         let mut match_data : HashMap<u32, MatchData> = HashMap::new();
@@ -77,6 +79,8 @@ match_data WHERE start_time >= ?1 AND start_time <= ?2
                         team_two_score: record.team_two_score as u32,
                         map: record.map,
                         is_tourney: record.is_tourney == 1i64,
+                        team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
+                        team_two_name: record.team_two_name.unwrap_or(String::from("Unknown"))
                     };
                     match_data.insert(record.r#match as u32, datum);
                 }
@@ -93,8 +97,8 @@ match_data WHERE start_time >= ?1 AND start_time <= ?2
         let result = sqlx::query!(
             r#"
 SELECT player, team, kills, deaths, assists, killstreak, dmg_dealt, dmg_taken, pickups,
-throws, passes, catches, strips, touchdowns, touchdown_passes FROM player_match_data WHERE
-match = ?1"#, match_id
+throws, passes, catches, strips, touchdowns, touchdown_passes, passing_blocks, receive_blocks
+FROM player_match_data WHERE match = ?1"#, match_id
         ).fetch_all(&self.connection_pool).await;
         let mut player_stats : HashMap<Uuid, PlayerFootballStats> = HashMap::new();
         match result {
@@ -123,6 +127,8 @@ match = ?1"#, match_id
                         strips: record.strips as u32,
                         touchdowns: record.touchdowns as u32,
                         touchdown_passes: record.touchdown_passes as u32,
+                        passing_blocks: record.passing_blocks.unwrap_or(0.0) as f32,
+                        receive_blocks: record.receive_blocks.unwrap_or(0.0) as f32
                     };
                     player_stats.insert(id, stats);
                 }
