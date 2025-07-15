@@ -97,7 +97,8 @@ is_tourney, team_one_name, team_two_name FROM match_data WHERE start_time >= ?1 
         let result = sqlx::query!(
             r#"
 SELECT player, team, kills, deaths, assists, killstreak, dmg_dealt, dmg_taken, pickups,
-throws, passes, catches, strips, touchdowns, touchdown_passes, passing_blocks, receive_blocks
+throws, passes, catches, strips, touchdowns, touchdown_passes, passing_blocks, receive_blocks,
+defensive_interceptions, pass_interceptions, damage_carrier
 FROM player_match_data WHERE match = ?1"#, match_id
         ).fetch_all(&self.connection_pool).await;
         let mut player_stats : HashMap<Uuid, PlayerFootballStats> = HashMap::new();
@@ -128,7 +129,10 @@ FROM player_match_data WHERE match = ?1"#, match_id
                         touchdowns: record.touchdowns as u32,
                         touchdown_passes: record.touchdown_passes as u32,
                         passing_blocks: record.passing_blocks.unwrap_or(0.0) as f32,
-                        receive_blocks: record.receive_blocks.unwrap_or(0.0) as f32
+                        receive_blocks: record.receive_blocks.unwrap_or(0.0) as f32,
+                        defensive_interceptions: record.defensive_interceptions.unwrap_or(0.0) as u32,
+                        pass_interceptions: record.pass_interceptions.unwrap_or(0.0) as u32,
+                        damage_carrier: record.damage_carrier.unwrap_or(0.0) as f32
                     };
                     player_stats.insert(id, stats);
                 }
