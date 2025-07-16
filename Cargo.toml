@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sqlx = { version = "0.8", features = [ "runtime-tokio", "sqlite" ] }
+sqlx = { version = "0.8", features = [ "runtime-tokio", "sqlite", "uuid"] }
 tokio = { version = "1.46.1", features = ["fs", "io-std", "io-util", "rt-multi-thread", "sync", "signal", "macros"] }
 log = "0.4.27"
 uuid = { version = "1.16.0", features = ["v4"] }

@@ -2,7 +2,7 @@ use crate::db::model::match_data::MatchData;
 use crate::db::model::player_match_stats::PlayerFootballStats;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use log::warn;
-use sqlx::{Error, Pool, Sqlite, SqlitePool};
+use sqlx::{Error, Execute, Pool, Sqlite, SqlitePool};
 use std::collections::HashMap;
 use std::str::from_utf8;
 use uuid::{uuid, Uuid};
@@ -143,5 +143,13 @@ FROM player_match_data WHERE match = ?1"#, match_id
             }
         };
         Some(player_stats)
+    }
+
+    pub async fn get_username_from_uuid(&self, uuid: Uuid) -> Option<String> {
+        let uuid_string = uuid.hyphenated().to_string();
+        let name = sqlx::query_scalar!(
+            r#"SELECT name FROM player_identities WHERE uuid = ?1"#, uuid_string
+        ).fetch_optional(&self.connection_pool).await.ok()?;
+        name
     }
 }

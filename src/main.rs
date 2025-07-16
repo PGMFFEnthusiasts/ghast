@@ -18,7 +18,7 @@ async fn main() {
         std::env::var("GHAST_DATABASE_PATH")
             .unwrap_or(String::from("sqlite:./data/sample.db")).as_str()
     ).await);
-    let username_resolver = UsernameResolver::create();
+    let username_resolver = UsernameResolver::create(db.clone());
     let end_result = rocket(GhastApiState {
         database: db.clone(),
         username_resolver: Arc::new(Mutex::new(username_resolver))
