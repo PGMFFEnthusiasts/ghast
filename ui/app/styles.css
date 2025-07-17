@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@utility ag-grid {
+  .ag-cell:active {
+    background-color: oklch(0.955 0.0134 240.95);
+  }
+
+  .ag-row.ag-row-last {
+    @apply border-b-gray-200!;
+  }
+}

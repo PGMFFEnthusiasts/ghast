@@ -20,7 +20,7 @@ import {
   formatNumericalDuration,
   formatReallyLongTime,
   divHtml as html,
-} from '@/utils/utils';
+} from '@/utils';
 
 const getData = async (): Promise<RecentMatches> => {
   const apiRoot =
