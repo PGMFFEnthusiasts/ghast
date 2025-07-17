@@ -23,7 +23,10 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          packages = [ f.stable.toolchain ];
+          packages = [
+            f.stable.toolchain
+            pkgs.bun
+          ];
         };
       }
     );
