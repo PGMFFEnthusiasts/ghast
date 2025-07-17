@@ -1,3 +1,4 @@
+use crate::db::database::Database;
 use crate::external::mojang::MojangApi;
 use crate::util::cached_accessor::LoadingCacheDataAccessor;
 use moka::future::Cache;
@@ -6,11 +7,10 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::task::JoinSet;
 use uuid::Uuid;
-use crate::db::database::Database;
 
 pub struct UsernameResolver {
     loading_cache: LoadingCacheDataAccessor<Uuid, String>,
-    database: Arc<Database>
+    database: Arc<Database>,
 }
 
 impl UsernameResolver {
@@ -21,28 +21,24 @@ impl UsernameResolver {
                 // loader: Arc::new(move |x| Box::pin(mojang_api.get_username_from_uuid(x))),
                 loader: Arc::new(move |x| {
                     let mojang_api = mojang_api.clone();
-                    Box::pin(async move {
-                        mojang_api.get_username_from_uuid(x).await
-                    })
+                    Box::pin(async move { mojang_api.get_username_from_uuid(x).await })
                 }),
                 cache: Cache::builder()
                     // 2 hrs
                     .time_to_live(Duration::from_secs(60 * 60 * 2))
                     .max_capacity(2048)
-                    .build()
+                    .build(),
             },
-            database
+            database,
         }
     }
 
     pub async fn resolve_batch(&mut self, uuids: Vec<Uuid>) -> HashMap<Uuid, Option<String>> {
-        let mut names : HashMap<Uuid, Option<String>> = HashMap::new();
+        let mut names: HashMap<Uuid, Option<String>> = HashMap::new();
         let mut set = JoinSet::new();
         for uuid in uuids {
             let db = self.database.clone();
-            let future = async move {
-                (uuid.clone(), db.get_username_from_uuid(uuid.clone()).await)
-            };
+            let future = async move { (uuid, db.get_username_from_uuid(uuid).await) };
             set.spawn(future);
         }
         let results = set.join_all().await;
@@ -52,16 +48,13 @@ impl UsernameResolver {
                 Some(name) => {
                     names.insert(result.0, Some(name));
                 }
-                None => {
-                    missing.push(result.0)
-                }
+                None => missing.push(result.0),
             }
         }
-        let api_names =
-            self.loading_cache.get_batch(missing).await;
+        let api_names = self.loading_cache.get_batch(missing).await;
         for (key, value) in api_names {
             if let Some(v) = value {
-                names.insert(key.clone(), Some(v.clone()));
+                names.insert(key, Some(v.clone()));
             }
         }
         names

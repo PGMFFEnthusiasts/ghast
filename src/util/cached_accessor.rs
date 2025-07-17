@@ -1,5 +1,4 @@
 use moka::future::Cache;
-use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::pin::Pin;
@@ -12,12 +11,11 @@ pub trait KeyedDataAccessor<K, V> {
 
 pub struct LoadingCacheDataAccessor<K, V> {
     pub loader: Arc<dyn Fn(K) -> Pin<Box<dyn Future<Output = Option<V>> + Send>> + Send + Sync>,
-    pub cache: Cache<K, V>
+    pub cache: Cache<K, V>,
 }
-impl<
-    K: Hash + Eq + Send + Sync + 'static + Clone,
-    V: Clone + Send + Sync + 'static
-> LoadingCacheDataAccessor<K, V> {
+impl<K: Hash + Eq + Send + Sync + 'static + Clone, V: Clone + Send + Sync + 'static>
+    LoadingCacheDataAccessor<K, V>
+{
     pub async fn get_batch(&mut self, keys: Vec<K>) -> HashMap<K, Option<V>> {
         let mut set = JoinSet::new();
 
@@ -35,7 +33,7 @@ impl<
                                 cache.insert(key.clone(), value.clone()).await;
                                 Some(value)
                             }
-                            None => None
+                            None => None,
                         }
                     }
                 };

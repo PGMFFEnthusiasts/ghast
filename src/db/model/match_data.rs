@@ -11,5 +11,5 @@ pub struct MatchData {
     pub map: String,
     pub is_tourney: bool,
     pub team_one_name: String,
-    pub team_two_name: String
+    pub team_two_name: String,
 }
