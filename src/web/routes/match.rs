@@ -53,11 +53,11 @@ async fn get_uber_data(
     state: &State<GhastApiState>,
 ) -> Option<UberIdentifiedMatchData> {
     let data = state.database.get_match_by_id(match_id).await?;
-    let players = get_identified_player_match_stats(match_id, state).await?;
+    let players = get_identified_player_match_stats(match_id, state).await;
     Some(UberIdentifiedMatchData {
         id: match_id,
         data,
-        players,
+        players: players.unwrap_or(vec![]),
     })
 }
 
