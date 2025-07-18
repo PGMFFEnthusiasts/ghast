@@ -178,7 +178,7 @@ const Stats = (props: { data: Uber }) => {
     <div class='container mx-auto flex min-h-screen flex-col space-y-4 p-2 xl:p-4'>
       <div>
         <A
-          class='opacity-70 transition-opacity duration-200 hover:opacity-100'
+          class='text-primary/70 hover:text-primary transition-colors duration-200'
           href='/matches'
         >
           ← Recent Matches

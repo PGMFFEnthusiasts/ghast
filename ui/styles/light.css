@@ -64,10 +64,8 @@
   --accent-track: #8b8e93;
 }
 
-
 @supports (color: color(display-p3 1 1 1)) {
   @media (color-gamut: p3) {
-
     :root {
       --gray-1: oklch(99.1% 0.0014 264.5);
       --gray-2: oklch(98.2% 0.0029 264.5);

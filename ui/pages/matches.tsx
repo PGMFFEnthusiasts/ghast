@@ -106,11 +106,11 @@ const Matches = (props: { matches: RecentMatches }) => {
     <div class='container mx-auto flex min-h-screen flex-col space-y-4 p-2 xl:p-4'>
       <div>
         <A
-          class='opacity-70 transition-opacity duration-200 hover:opacity-100'
+          class='text-primary/60 hover:text-primary group transition-colors duration-200'
           href='/'
         >
           ← The{` `}
-          <span class='rounded bg-red-500/50 px-2 py-1 font-black'>
+          <span class='rounded bg-red-500/35 px-2 py-1 font-black transition-colors duration-200 group-hover:bg-red-500/50'>
             OFFICIAL
           </span>
           {` `}

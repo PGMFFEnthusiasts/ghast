@@ -69,7 +69,6 @@
 
 @supports (color: color(display-p3 1 1 1)) {
   @media (color-gamut: p3) and (prefers-color-scheme: dark) {
-
     :root {
       --gray-1: oklch(13% 0.0181 257.7);
       --gray-2: oklch(20.5% 0.0186 257.7);
