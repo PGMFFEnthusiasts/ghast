@@ -56,6 +56,10 @@ const Matches = (props: { matches: RecentMatches }) => {
       ClientSideRowModelModule,
     ]);
     const grid = createGrid(theGrid!, {
+      autoSizeStrategy: {
+        defaultMinWidth: 100,
+        type: `fitGridWidth`,
+      },
       columnDefs: [
         {
           cellRenderer: linkCellRenderer,
@@ -113,7 +117,7 @@ const Matches = (props: { matches: RecentMatches }) => {
           TB "Work In Progress" Homepage
         </A>
         <div class='mt-2 text-2xl font-bold'>Recent Matches</div>
-        <div class='opacity-50'>
+        <div class='text-secondary'>
           Yep, that's literally all of the recent matches. You can still view
           previous matches by their links, of course.
         </div>

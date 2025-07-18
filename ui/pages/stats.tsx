@@ -22,7 +22,7 @@ import {
 import { toast } from 'solid-sonner';
 
 import { Button } from '@/components/button';
-import Csv from '@/icons/csv.svg';
+import { Csv } from '@/icons';
 import { formatNumericalDuration, formatReallyLongTime } from '@/utils';
 import { type Player, type Uber } from '@/utils/types';
 import { useTheme } from '@/utils/use-theme';
@@ -156,7 +156,7 @@ const Stats = (props: { data: Uber }) => {
       )
         return;
       const ev = e as CellKeyDownEvent;
-      toast(`Copied ${ev.value} to clipboard`);
+      toast(`Copied "${ev.value}" to clipboard`);
 
       e.api.flashCells({
         columns: [ev.column],
@@ -186,7 +186,7 @@ const Stats = (props: { data: Uber }) => {
         <h1 class='text-2xl font-bold'>
           <span class='tracking-wide uppercase'>{props.data.data.map}</span>
           {` `}
-          <span class='font-medium opacity-25'>#{props.data.id}</span>
+          <span class='text-tertiary font-medium'>#{props.data.id}</span>
         </h1>
         <div>Started {formatReallyLongTime(props.data.data.start_time)}</div>
         <div>
@@ -220,7 +220,7 @@ const Stats = (props: { data: Uber }) => {
           toast.success(`CSV copied to the clipboard`);
         }}
       >
-        <img src={Csv} />
+        <Csv />
       </Button>
     </div>
   );
