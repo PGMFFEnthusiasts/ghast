@@ -2,7 +2,7 @@ import { A } from '@solidjs/router';
 import { toast } from 'solid-sonner';
 
 const LanderPage = () => (
-  <div class='container min-h-screen p-4'>
+  <div class='container mx-auto min-h-screen p-4'>
     <div class='mx-auto max-w-xl space-y-4 py-4 lg:py-8'>
       <h1 class='text-2xl font-black'>
         The{` `}
