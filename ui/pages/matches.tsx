@@ -21,6 +21,7 @@ import {
   formatReallyLongTime,
   divHtml as html,
 } from '@/utils';
+import { useTheme } from '@/utils/use-theme';
 
 const getData = async (): Promise<RecentMatches> => {
   const apiRoot =
@@ -35,12 +36,14 @@ const linkCellRenderer = (params: ICellRendererParams<Match>) => html`
     href="/matches/${params.data!.id}"
     class="text-blue-500 underline decoration-dotted"
   >
-    Match #${params.data!.id}
+    #${params.data!.id}
   </a>
 `;
 
 const Matches = (props: { matches: RecentMatches }) => {
   let theGrid: HTMLDivElement;
+
+  const theme = useTheme();
 
   onMount(() => {
     ModuleRegistry.registerModules([
@@ -53,11 +56,13 @@ const Matches = (props: { matches: RecentMatches }) => {
       ClientSideRowModelModule,
     ]);
     const grid = createGrid(theGrid!, {
-      autoSizeStrategy: {
-        type: `fitGridWidth`,
-      },
       columnDefs: [
-        { field: `id`, headerName: `#`, width: 80 },
+        {
+          cellRenderer: linkCellRenderer,
+          field: `id`,
+          headerName: `#`,
+          width: 80,
+        },
         {
           field: `data.map`,
           filter: true,
@@ -83,11 +88,6 @@ const Matches = (props: { matches: RecentMatches }) => {
           valueFormatter: (v) =>
             `${v.data?.data.team_one_score} - ${v.data?.data.team_two_score}`,
         },
-        {
-          cellRenderer: linkCellRenderer,
-          headerName: `Link`,
-          sortable: false,
-        },
       ],
       domLayout: `autoHeight`,
       rowData: props.matches.sort((a, b) => b.id - a.id),
@@ -102,11 +102,13 @@ const Matches = (props: { matches: RecentMatches }) => {
     <div class='container mx-auto flex min-h-screen flex-col space-y-4 p-2 xl:p-4'>
       <div>
         <A
-          class='opacity-50 transition-opacity duration-200 hover:opacity-100'
+          class='opacity-70 transition-opacity duration-200 hover:opacity-100'
           href='/'
         >
           ← The{` `}
-          <span class='rounded bg-red-300 px-2 py-1 font-black'>OFFICIAL</span>
+          <span class='rounded bg-red-500/50 px-2 py-1 font-black'>
+            OFFICIAL
+          </span>
           {` `}
           TB "Work In Progress" Homepage
         </A>
@@ -116,9 +118,13 @@ const Matches = (props: { matches: RecentMatches }) => {
           previous matches by their links, of course.
         </div>
       </div>
-      <hr class='text-gray-200' />
+      <hr />
       <div class='flex-1'>
-        <div class='h-full' ref={theGrid!} />
+        <div
+          class='h-full'
+          data-ag-theme-mode={theme().replace(`dark`, `dark-blue`)}
+          ref={theGrid!}
+        />
       </div>
     </div>
   );

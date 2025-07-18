@@ -25,6 +25,7 @@ import { Button } from '@/components/button';
 import Csv from '@/icons/csv.svg';
 import { formatNumericalDuration, formatReallyLongTime } from '@/utils';
 import { type Player, type Uber } from '@/utils/types';
+import { useTheme } from '@/utils/use-theme';
 
 const getData = async (id: string | undefined): Promise<Uber | undefined> => {
   if (!id) return undefined;
@@ -68,6 +69,8 @@ const Stats = (props: { data: Uber }) => {
     props.data.data.team_one_name,
     props.data.data.team_two_name,
   ];
+
+  const theme = useTheme();
 
   onMount(() => {
     ModuleRegistry.registerModules([
@@ -147,7 +150,10 @@ const Stats = (props: { data: Uber }) => {
 
     grid.addEventListener(`cellKeyDown`, (e) => {
       const keyboardEvent = e.event as KeyboardEvent;
-      if (!keyboardEvent.ctrlKey || keyboardEvent.key.toLowerCase() !== `c`)
+      if (
+        !(keyboardEvent.ctrlKey || keyboardEvent.metaKey) ||
+        keyboardEvent.key.toLowerCase() !== `c`
+      )
         return;
       const ev = e as CellKeyDownEvent;
       toast(`Copied ${ev.value} to clipboard`);
@@ -172,37 +178,39 @@ const Stats = (props: { data: Uber }) => {
     <div class='container mx-auto flex min-h-screen flex-col space-y-4 p-2 xl:p-4'>
       <div>
         <A
-          class='opacity-50 transition-opacity duration-200 hover:opacity-100'
+          class='opacity-70 transition-opacity duration-200 hover:opacity-100'
           href='/matches'
         >
           ← Recent Matches
         </A>
-        <div class='text-2xl font-bold'>
+        <h1 class='text-2xl font-bold'>
           <span class='tracking-wide uppercase'>{props.data.data.map}</span>
           {` `}
           <span class='font-medium opacity-25'>#{props.data.id}</span>
-        </div>
+        </h1>
         <div>Started {formatReallyLongTime(props.data.data.start_time)}</div>
         <div>
           {formatNumericalDuration(props.data.data.duration)} - played on{` `}
           {props.data.data.server}
         </div>
         <div>
-          <span class={teamColors[0]}>
-            {props.data.data.team_one_name} {props.data.data.team_one_score}
-          </span>
-          {` `}-{` `}
-          <span class={teamColors[1]}>
-            {props.data.data.team_two_score} {props.data.data.team_two_name}
-          </span>
+          <span class={teamColors[0]}>{props.data.data.team_one_name}</span>
+          {` `}
+          {props.data.data.team_one_score} - {props.data.data.team_two_score}
+          {` `}
+          <span class={teamColors[1]}>{props.data.data.team_two_name}</span>
         </div>
       </div>
-      <hr class='text-gray-200' />
+      <hr />
       <div class='flex-1'>
-        <div class='ag-grid' ref={theGrid!} />
+        <div
+          class='ag-grid'
+          data-ag-theme-mode={theme().replace(`dark`, `dark-blue`)}
+          ref={theGrid!}
+        />
       </div>
 
-      <hr class='text-gray-200' />
+      <hr />
       <Button
         onClick={() => {
           const grid = currentGrid();

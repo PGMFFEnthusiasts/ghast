@@ -6,14 +6,15 @@ const LanderPage = () => (
     <div class='mx-auto max-w-xl space-y-4 py-4 lg:py-8'>
       <h1 class='text-2xl font-black'>
         The{` `}
-        <span class='rounded bg-red-300 px-2 py-1 font-black'>OFFICIAL</span> TB
-        "Work In Progress" Homepage
+        <span class='rounded bg-red-500/50 px-2 py-1 font-black'>OFFICIAL</span>
+        {` `}
+        TB "Work In Progress" Homepage
       </h1>
       <p>
         This page is pretty work in progress, please excuse the mess! It'll get
         sorted eventually, hopefully.
       </p>
-      <hr class='text-gray-200' />
+      <hr />
       <div>
         <h2 class='text-2xl font-black'>Server Facts</h2>
         <p>
@@ -30,10 +31,10 @@ const LanderPage = () => (
           for even more information.
         </p>
       </div>
-      <div class='mx-auto my-8 w-full max-w-sm border-1 border-black bg-white p-4 font-sans text-sm'>
-        <h2 class='mb-1 border-b-8 border-black pb-1 text-3xl font-extrabold'>
+      <div class='mx-auto my-8 w-full max-w-sm border-1 border-black bg-white p-4 font-sans text-sm text-black'>
+        <div class='mb-1 border-b-8 border-black pb-1 text-3xl font-extrabold'>
           Server Facts
-        </h2>
+        </div>
 
         <div class='mb-1 flex items-baseline justify-between'>
           <p class='font-normal'>Serving Size</p>
@@ -144,26 +145,29 @@ const LanderPage = () => (
           general nutrition advice.
         </p>
       </div>
-      <hr class='text-gray-200' />
+      <hr />
       <div class='text-center'>
         <A class='text-blue-500 underline decoration-dotted' href='/matches'>
           View Recent matches ↗
         </A>
       </div>
-      <hr class='text-gray-200' />
+      <hr />
+      <h2 class='font-black'>DISCLAIMER:</h2>
       <p>
-        <span class='font-black'>DISCLAIMER</span>: If you are on a page{` `}
+        If you are on a page{` `}
         <b>that is not this page</b> which claims to be the{` `}
-        <span class='rounded bg-red-300 px-2 py-1 font-black'>OFFICIAL</span> TB
-        "Work In Progress" Homepage, then you are likely on a false or
+        <span class='rounded bg-red-500/50 px-2 py-1 font-black'>OFFICIAL</span>
+        {` `}
+        TB "Work In Progress" Homepage, then you are likely on a false or
         counterfeit page which is attempting to scam you, which in that case our
         advice is to immediately leave such page and{` `}
         <b>report such page to the proper authorities</b>. If you do not report
         the page to the proper authorities, you will be declared as{` `}
         <b>COMPLICIT</b> with the acts of any such fake "
-        <span class='rounded bg-red-300 px-2 py-1 font-black'>OFFICIAL</span> TB
-        'Work In Progress' Homepage." If that is the case, you are advised to be
-        aware of the potentially unforseen{` `}
+        <span class='rounded bg-red-500/50 px-2 py-1 font-black'>OFFICIAL</span>
+        {` `}
+        TB 'Work In Progress' Homepage." If that is the case, you are advised to
+        be aware of the potentially unforseen{` `}
         <b>GLOBALLY CATASTROPHIC CONSEQUENCES</b>. Furthermore, we reserve the
         right to use CATs or (Complete Annihilation Technologies) to deal with
         flagrant violations of the above.

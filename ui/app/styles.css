@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @utility ag-grid {
   .ag-cell:active {
@@ -8,4 +8,17 @@
   .ag-row.ag-row-last {
     @apply border-b-gray-200!;
   }
+}
+
+hr {
+  @apply text-gray-200 dark:text-gray-800;
+}
+
+html {
+  @apply dark:bg-gray-950 dark:text-neutral-200;
+}
+
+h1,
+h2 {
+  @apply dark:text-white;
 }
