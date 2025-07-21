@@ -1,6 +1,6 @@
 Here's a summary of the provided "Server Facts":
 
-This image displays "Server Facts" as if it were cut from a product box, **advising users to join their [Discord](https://discord.gg/YYYtfhDGUM) for more info**. It details a game server's specifications and rules:
+This image displays "Server Facts" as if it were cut from a product box, **advising users to join their [Discord]($DISCORD) for more info**. It details a game server's specifications and rules:
 
 ### Server Specifications
 *   **Serving Size:** 12+ players

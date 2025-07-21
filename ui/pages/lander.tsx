@@ -4,6 +4,7 @@ import { toast } from 'solid-sonner';
 import { BradyGPT } from '@/components/brady-gpt';
 import { buttonStyles } from '@/components/button';
 import { Header } from '@/components/header';
+import { discordLink } from '@/utils/const';
 
 const LanderPage = () => (
   <main class='mx-auto h-fit max-w-xl space-y-6 py-8 max-sm:p-4'>
@@ -28,7 +29,7 @@ const LanderPage = () => (
         you should join the{` `}
         <a
           class='text-blue-500 underline decoration-dotted'
-          href='https://discord.gg/YYYtfhDGUM'
+          href={discordLink}
           target='_blank'
         >
           Discord

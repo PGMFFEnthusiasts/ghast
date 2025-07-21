@@ -23,7 +23,11 @@ import { toast } from 'solid-sonner';
 
 import { Button } from '@/components/button';
 import { Csv } from '@/icons';
-import { formatNumericalDuration, formatReallyLongTime } from '@/utils';
+import {
+  formatNumericalDuration,
+  formatReallyLongTime,
+  divHtml as html,
+} from '@/utils';
 import { gridTheme } from '@/utils/grid';
 import { type Player, type Uber } from '@/utils/types';
 import { useTheme } from '@/utils/use-theme';
@@ -39,28 +43,30 @@ const getData = async (id: string | undefined): Promise<Uber | undefined> => {
 
 const teamColors = [`text-red-600`, `text-blue-600`];
 
-const nameCellRenderer = (params: ICellRendererParams<Player>) => (
+const nameCellRenderer = (params: ICellRendererParams<Player>) => html`
   <div>
     <span
-      class={`${teamColors[params.data!.stats.team - 1]} flex items-center gap-2 font-medium`}
+      class="${teamColors[
+        params.data!.stats.team - 1
+      ]} flex items-center gap-2 font-medium"
     >
       <img
-        alt={`${params.value}'s Head`}
-        class='aspect-square size-6'
-        src={`https://nmsr.nickac.dev/face/${params.data!.uuid}?width=64`}
+        alt="${params.value}'s Head"
+        class="aspect-square size-6"
+        src="${`https://nmsr.nickac.dev/face/${params.data!.uuid}?width=64`}"
       />
-      {`${params.value}`}
+      ${params.value}
     </span>
   </div>
-);
+`;
 
-const teamCellRenderer = (params: ICellRendererParams<Player>) => (
+const teamCellRenderer = (params: ICellRendererParams<Player>) => html`
   <div>
-    <span class={`${teamColors[params.data!.stats.team - 1]}`}>
-      {params.value}
+    <span class="${teamColors[params.data!.stats.team - 1]}">
+      ${params.value}
     </span>
   </div>
-);
+`;
 
 const Stats = (props: { data: Uber }) => {
   const [currentGrid, setCurrentGrid] = createSignal<GridApi<Player>>();

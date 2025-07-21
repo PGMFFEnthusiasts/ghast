@@ -7,8 +7,7 @@ import { unified } from 'unified';
 import markdown from '@/assets/slop.md?raw';
 import { Button } from '@/components/button';
 import { ArrowUp } from '@/icons';
-
-const remaining = markdown.split(/([\n\s])/);
+import { discordLink } from '@/utils/const';
 
 const pipeline = unified()
   .use(remarkParse)
@@ -21,6 +20,8 @@ export const BradyGPT = () => {
     `im not reading allat summarize it`,
   );
   let responseBox: HTMLDivElement;
+
+  const remaining = markdown.replace(`$DISCORD`, discordLink).split(/([\n\s])/);
 
   const generateMore = () => {
     setCurrentMarkdown(
