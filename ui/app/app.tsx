@@ -7,7 +7,7 @@ import NotFoundPage from '@/pages/404';
 const Stats = lazy(() => import(`@/pages/stats`));
 const Matches = lazy(() => import(`@/pages/matches`));
 const Lander = lazy(() => import(`@/pages/lander`));
-const DiscordPage = lazy(() => import('@/pages/discord'));
+const DiscordPage = lazy(() => import(`@/pages/discord`));
 
 export const App = () => (
   <>

@@ -4,11 +4,10 @@ import remarkRehype from 'remark-rehype';
 import { createSignal, Show } from 'solid-js';
 import { unified } from 'unified';
 
+import help from '@/assets/help.md?raw';
 import { Button } from '@/components/button';
 import { ArrowUp } from '@/icons';
 import { discordLink } from '@/utils/const';
-
-import help from '@/assets/help.md?raw';
 
 const pipeline = unified()
   .use(remarkParse)
@@ -16,13 +15,13 @@ const pipeline = unified()
   .use(rehypeStringify);
 
 const lazyPhrases = [
-  'im not reading allat summarize it',
-  'summarize plz',
-  'tl;dr this',
-  'summary',
-  'eli5',
-  'read this for me please',
-  'i love wasting power',
+  `im not reading allat summarize it`,
+  `summarize plz`,
+  `tl;dr this`,
+  `summary`,
+  `eli5`,
+  `read this for me please`,
+  `i love wasting power`,
 ];
 
 export const BradyGPT = (props: { content: string }) => {
@@ -65,7 +64,7 @@ export const BradyGPT = (props: { content: string }) => {
           {new Date().getDate().toString().padStart(2, `0`)} Thinking
         </span>
       </div>
-      <Show when={currentMarkdown().length !== 0 && thinkingTime() !== 0}>
+      <Show when={currentMarkdown().length > 0 && thinkingTime() !== 0}>
         <div class='text-sm font-semibold text-current/40'>
           Thought for {(thinkingTime() / 1000).toFixed(1)}s
         </div>
@@ -78,10 +77,7 @@ export const BradyGPT = (props: { content: string }) => {
           <div class='mb-2.5 h-2 max-w-[330px] rounded-full bg-gray-200 dark:bg-gray-700'></div>
         </div>
       </Show>
-      <div
-        class='prose dark:prose-invert prose-headings:my-2 prose-a:text-blue-500 prose-a:decoration-dotted prose-code:before:content-[""] prose-code:after:content-[""] prose-ul:my-0.5 prose-li:my-0.5'
-        ref={responseBox!}
-      />
+      <div class='brady-prose' ref={responseBox!} />
       <Show when={currentMarkdown().length === 0 && thinkingTime() === 0}>
         <div class='flex gap-2'>
           <input
