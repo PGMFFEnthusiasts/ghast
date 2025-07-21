@@ -8,6 +8,8 @@ import { Button } from '@/components/button';
 import { ArrowUp } from '@/icons';
 import { discordLink } from '@/utils/const';
 
+import help from '@/assets/help.md?raw';
+
 const pipeline = unified()
   .use(remarkParse)
   .use(remarkRehype)
@@ -31,9 +33,8 @@ export const BradyGPT = (props: { content: string }) => {
   const [thinkingTime, setThinkingTime] = createSignal(0);
   let responseBox: HTMLDivElement;
 
-  const remaining = props.content
-    .replace(`$DISCORD`, discordLink)
-    .split(/([\n\s])/);
+  const content = Math.random() < 0.2 ? props.content + help : props.content;
+  const remaining = content.replace(`$DISCORD`, discordLink).split(/([\n\s])/);
 
   const generate = () => {
     setCurrentMarkdown(
