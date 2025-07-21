@@ -6,13 +6,20 @@ import { BradyGPT } from '@/components/brady-gpt';
 const LanderPage = () => (
   <div class='container mx-auto min-h-screen p-4'>
     <div class='mx-auto max-w-xl space-y-4 py-4 lg:py-8'>
-      <img alt='TB Logo' class='size-16' src='/brady_logo.png' />
-      <h1 class='text-2xl font-black'>
-        The{` `}
-        <span class='rounded bg-red-500/50 px-2 py-1 font-black'>OFFICIAL</span>
-        {` `}
-        TB "Work In Progress" Homepage
-      </h1>
+      <header class='flex flex-col gap-2'>
+        <div class='flex items-center gap-2'>
+          <img alt='TB Logo' class='size-16' src='/brady_logo.png' />
+          <h1 class='text-2xl font-black'>PGM Flag Football</h1>
+        </div>
+        <h1 class='text-2xl font-black'>
+          The{` `}
+          <span class='rounded bg-red-500/50 px-2 py-1 font-black'>
+            OFFICIAL
+          </span>
+          {` `}
+          Tom Brady "Work In Progress" Homepage
+        </h1>
+      </header>
       <p>
         This page is pretty work in progress, please excuse the mess! It'll get
         sorted eventually, hopefully.

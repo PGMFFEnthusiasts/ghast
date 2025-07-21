@@ -102,6 +102,7 @@ const Matches = (props: { matches: RecentMatches }) => {
       ],
       domLayout: `autoHeight`,
       rowData: props.matches.sort((a, b) => b.id - a.id),
+      suppressDragLeaveHidesColumns: true,
       theme: gridTheme,
     });
 

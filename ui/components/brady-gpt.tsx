@@ -6,7 +6,7 @@ import { unified } from 'unified';
 
 import markdown from '@/assets/slop.md?raw';
 import { Button } from '@/components/button';
-import { ArrowUp } from '@/icons/arrow-up';
+import { ArrowUp } from '@/icons';
 
 export const BradyGPT = () => {
   const [currentMarkdown, setCurrentMarkdown] = createSignal(``);
@@ -36,7 +36,7 @@ export const BradyGPT = () => {
 
   const start = () => {
     const loop = () => {
-      if (generateMore()) setTimeout(loop, 100);
+      if (generateMore()) setTimeout(loop, 60 + Math.floor(Math.random() * 80));
     };
 
     loop();
@@ -58,12 +58,15 @@ export const BradyGPT = () => {
       <Show when={currentMarkdown().length === 0}>
         <div class='flex flex-row gap-2'>
           <input
-            class='h-8 flex-1 rounded bg-current/10 px-2 py-1 outline-1 outline-border'
+            class='h-8 flex-1 rounded bg-background-hover/30 p-2 outline-1 outline-border/80 transition-colors duration-150 focus:outline-border'
             onInput={() => setImmutableInput((v) => v + `\u200B`)}
             type='text'
             value={immutableInput()}
           />
-          <Button class='hover:bg-blue-500 active:bg-blue-500' onClick={start}>
+          <Button
+            class='hover:bg-background-hover active:bg-background-active'
+            onClick={start}
+          >
             <ArrowUp class='text-white' />
           </Button>
         </div>

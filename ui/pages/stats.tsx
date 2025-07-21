@@ -147,6 +147,7 @@ const Stats = (props: { data: Uber }) => {
       },
       domLayout: `autoHeight`,
       rowData: props.data.players,
+      suppressDragLeaveHidesColumns: true,
       theme: gridTheme,
     });
 
