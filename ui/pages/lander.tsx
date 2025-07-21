@@ -5,6 +5,7 @@ import { BradyGPT } from '@/components/brady-gpt';
 import { buttonStyles } from '@/components/button';
 import { Header } from '@/components/header';
 import { discordLink } from '@/utils/const';
+import factSummary from '@/assets/facts.md?raw';
 
 const LanderPage = () => (
   <main class='mx-auto h-fit max-w-xl space-y-6 py-8 max-sm:p-4'>
@@ -39,7 +40,7 @@ const LanderPage = () => (
       </p>
       <ServerFacts />
     </section>
-    <BradyGPT />
+    <BradyGPT content={factSummary} />
     <hr />
     <A class={buttonStyles(`bg-button`)} href='/matches'>
       View Recent Matches ↗

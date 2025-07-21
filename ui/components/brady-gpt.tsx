@@ -1,10 +1,9 @@
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
-import { createEffect, createSignal, Show } from 'solid-js';
+import { createSignal, Show } from 'solid-js';
 import { unified } from 'unified';
 
-import markdown from '@/assets/slop.md?raw';
 import { Button } from '@/components/button';
 import { ArrowUp } from '@/icons';
 import { discordLink } from '@/utils/const';
@@ -14,30 +13,45 @@ const pipeline = unified()
   .use(remarkRehype)
   .use(rehypeStringify);
 
-export const BradyGPT = () => {
+const lazyPhrases = [
+  'im not reading allat summarize it',
+  'summarize plz',
+  'tl;dr this',
+  'summary',
+  'eli5',
+  'read this for me please',
+  'i love wasting power',
+];
+
+export const BradyGPT = (props: { content: string }) => {
   const [currentMarkdown, setCurrentMarkdown] = createSignal(``);
   const [immutableInput, setImmutableInput] = createSignal(
-    `im not reading allat summarize it`,
+    lazyPhrases[Math.floor(Math.random() * lazyPhrases.length)],
   );
+  const [thinkingTime, setThinkingTime] = createSignal(0);
   let responseBox: HTMLDivElement;
 
-  const remaining = markdown.replace(`$DISCORD`, discordLink).split(/([\n\s])/);
+  const remaining = props.content
+    .replace(`$DISCORD`, discordLink)
+    .split(/([\n\s])/);
 
-  const generateMore = () => {
+  const generate = () => {
     setCurrentMarkdown(
       (old) =>
         old + remaining.splice(0, Math.floor(2 + Math.random() * 6)).join(``),
     );
+    responseBox!.innerHTML = pipeline.processSync(currentMarkdown()).toString();
 
     return remaining.length > 0;
   };
 
-  createEffect(() => {
-    responseBox!.innerHTML = pipeline.processSync(currentMarkdown()).toString();
-  });
-
   const loop = () => {
-    if (generateMore()) setTimeout(loop, 60 + Math.floor(Math.random() * 80));
+    if (generate()) setTimeout(loop, 60 + Math.floor(Math.random() * 80));
+  };
+
+  const start = () => {
+    setThinkingTime(Math.floor(1000 + Math.random() * 2000));
+    setTimeout(loop, thinkingTime());
   };
 
   return (
@@ -47,23 +61,43 @@ export const BradyGPT = () => {
         <span class='font-medium text-current/80'>
           BradyGPT v1-12T{` `}
           {new Date().getMonth().toString().padStart(2, `0`)}-
-          {new Date().getDate().toString().padStart(2, `0`)}
+          {new Date().getDate().toString().padStart(2, `0`)} Thinking
         </span>
       </div>
+      <Show when={currentMarkdown().length !== 0 && thinkingTime() !== 0}>
+        <div class='text-sm font-semibold text-current/40'>
+          Thought for {(thinkingTime() / 1000).toFixed(1)}s
+        </div>
+      </Show>
+      <Show when={currentMarkdown().length === 0 && thinkingTime() !== 0}>
+        <div class='animate-pulse'>
+          <div class='mb-4 h-2.5 w-24 rounded-full bg-gray-200 dark:bg-gray-700'></div>
+          <div class='mb-2.5 h-2 max-w-[360px] rounded-full bg-gray-200 dark:bg-gray-700'></div>
+          <div class='mb-2.5 h-2 rounded-full bg-gray-200 dark:bg-gray-700'></div>
+          <div class='mb-2.5 h-2 max-w-[330px] rounded-full bg-gray-200 dark:bg-gray-700'></div>
+        </div>
+      </Show>
       <div
         class='prose dark:prose-invert prose-headings:my-2 prose-a:text-blue-500 prose-a:decoration-dotted prose-code:before:content-[""] prose-code:after:content-[""] prose-ul:my-0.5 prose-li:my-0.5'
         ref={responseBox!}
       />
-      <Show when={currentMarkdown().length === 0}>
+      <Show when={currentMarkdown().length === 0 && thinkingTime() === 0}>
         <div class='flex gap-2'>
           <input
             class='h-8 flex-1 rounded bg-input p-2 outline-1 outline-border transition-colors duration-150 focus:outline-border-hover'
             name='brady-gpt-query'
-            onInput={() => setImmutableInput((v) => v + `\u200B`)}
+            onInput={() =>
+              setImmutableInput(
+                (v) =>
+                  lazyPhrases.filter((k) => k !== v)[
+                    Math.floor(Math.random() * (lazyPhrases.length - 1))
+                  ],
+              )
+            }
             type='text'
             value={immutableInput()}
           />
-          <Button class='size-8' onClick={loop}>
+          <Button class='size-8' onClick={start}>
             <ArrowUp />
           </Button>
         </div>
