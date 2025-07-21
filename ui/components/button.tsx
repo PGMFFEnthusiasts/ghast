@@ -1,13 +1,16 @@
 import type { ParentProps } from 'solid-js';
 
-import { clsx } from 'clsx';
+import { cn } from '@/utils/cn';
 
-export const Button = (props: ParentProps & { onClick: () => void }) => (
+export const Button = (
+  props: ParentProps & { class?: string; onClick: () => void },
+) => (
   <button
-    class={clsx(
+    class={cn(
       `flex size-8 items-center justify-center rounded p-2 transition-all hover:cursor-pointer active:scale-95`,
-      `outline-border hover:outline-border-hover active:outline-border-active outline-1`,
-      `active:bg-background-active hover:bg-background-hover`,
+      `outline-1 outline-border hover:outline-border-hover active:outline-border-active`,
+      `hover:bg-background-hover active:bg-background-active`,
+      props.class,
     )}
     onclick={() => props.onClick()}
   >

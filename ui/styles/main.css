@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
 @import './light.css';
 @import './dark.css';
 

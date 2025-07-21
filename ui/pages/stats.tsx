@@ -24,6 +24,7 @@ import { toast } from 'solid-sonner';
 import { Button } from '@/components/button';
 import { Csv } from '@/icons';
 import { formatNumericalDuration, formatReallyLongTime } from '@/utils';
+import { gridTheme } from '@/utils/grid';
 import { type Player, type Uber } from '@/utils/types';
 import { useTheme } from '@/utils/use-theme';
 
@@ -146,6 +147,7 @@ const Stats = (props: { data: Uber }) => {
       },
       domLayout: `autoHeight`,
       rowData: props.data.players,
+      theme: gridTheme,
     });
 
     grid.addEventListener(`cellKeyDown`, (e) => {
@@ -178,7 +180,7 @@ const Stats = (props: { data: Uber }) => {
     <div class='container mx-auto flex min-h-screen flex-col space-y-4 p-2 xl:p-4'>
       <div>
         <A
-          class='text-primary/70 hover:text-primary transition-colors duration-200'
+          class='text-primary/70 transition-colors duration-200 hover:text-primary'
           href='/matches'
         >
           ← Recent Matches
@@ -186,7 +188,7 @@ const Stats = (props: { data: Uber }) => {
         <h1 class='text-2xl font-bold'>
           <span class='tracking-wide uppercase'>{props.data.data.map}</span>
           {` `}
-          <span class='text-tertiary font-medium'>#{props.data.id}</span>
+          <span class='font-medium text-tertiary'>#{props.data.id}</span>
         </h1>
         <div>Started {formatReallyLongTime(props.data.data.start_time)}</div>
         <div>

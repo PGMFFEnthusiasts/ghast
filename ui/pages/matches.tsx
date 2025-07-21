@@ -21,6 +21,7 @@ import {
   formatReallyLongTime,
   divHtml as html,
 } from '@/utils';
+import { gridTheme } from '@/utils/grid';
 import { useTheme } from '@/utils/use-theme';
 
 const getData = async (): Promise<RecentMatches> => {
@@ -55,6 +56,7 @@ const Matches = (props: { matches: RecentMatches }) => {
       EventApiModule,
       ClientSideRowModelModule,
     ]);
+
     const grid = createGrid(theGrid!, {
       autoSizeStrategy: {
         defaultMinWidth: 100,
@@ -73,7 +75,12 @@ const Matches = (props: { matches: RecentMatches }) => {
           headerName: `Map`,
           valueFormatter: (v) => v.value.toUpperCase(),
         },
-        { field: `data.server`, filter: true, headerName: `Server` },
+        {
+          field: `data.server`,
+          filter: true,
+          headerName: `Server`,
+          valueFormatter: (v) => v.value.replace(`tombrady`, `primary`),
+        },
         {
           field: `data.start_time`,
           headerName: `Start Time`,
@@ -95,6 +102,7 @@ const Matches = (props: { matches: RecentMatches }) => {
       ],
       domLayout: `autoHeight`,
       rowData: props.matches.sort((a, b) => b.id - a.id),
+      theme: gridTheme,
     });
 
     return () => {
@@ -106,7 +114,7 @@ const Matches = (props: { matches: RecentMatches }) => {
     <div class='container mx-auto flex min-h-screen flex-col space-y-4 p-2 xl:p-4'>
       <div>
         <A
-          class='text-primary/60 hover:text-primary group transition-colors duration-200'
+          class='group text-primary/60 transition-colors duration-200 hover:text-primary'
           href='/'
         >
           ← The{` `}

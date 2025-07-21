@@ -1,9 +1,12 @@
 import { A } from '@solidjs/router';
 import { toast } from 'solid-sonner';
 
+import { BradyGPT } from '@/components/brady-gpt';
+
 const LanderPage = () => (
   <div class='container mx-auto min-h-screen p-4'>
     <div class='mx-auto max-w-xl space-y-4 py-4 lg:py-8'>
+      <img alt='TB Logo' class='size-16' src='/brady_logo.png' />
       <h1 class='text-2xl font-black'>
         The{` `}
         <span class='rounded bg-red-500/50 px-2 py-1 font-black'>OFFICIAL</span>
@@ -146,6 +149,8 @@ const LanderPage = () => (
         </p>
       </div>
       <hr />
+      <BradyGPT />
+      <hr />
       <div class='text-center'>
         <A class='text-blue-500 underline decoration-dotted' href='/matches'>
           View Recent matches ↗
@@ -168,9 +173,7 @@ const LanderPage = () => (
         {` `}
         TB 'Work In Progress' Homepage." If that is the case, you are advised to
         be aware of the potentially unforseen{` `}
-        <b>GLOBALLY CATASTROPHIC CONSEQUENCES</b>. Furthermore, we reserve the
-        right to use CATs or (Complete Annihilation Technologies) to deal with
-        flagrant violations of the above.
+        <b>GLOBALLY CATASTROPHIC CONSEQUENCES</b>.
       </p>
     </div>
   </div>
