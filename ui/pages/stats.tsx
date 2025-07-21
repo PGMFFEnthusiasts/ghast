@@ -215,6 +215,7 @@ const Stats = (props: { data: Uber }) => {
 
       <hr />
       <Button
+        class='size-8'
         onClick={() => {
           const grid = currentGrid();
           if (!grid) return;

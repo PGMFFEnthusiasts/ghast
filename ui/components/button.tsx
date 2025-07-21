@@ -1,19 +1,23 @@
-import type { ParentProps } from 'solid-js';
+import type { JSX } from 'solid-js';
 
 import { cn } from '@/utils/cn';
 
-export const Button = (
-  props: ParentProps & { class?: string; onClick: () => void },
-) => (
-  <button
-    class={cn(
-      `flex size-8 items-center justify-center rounded p-2 transition-all hover:cursor-pointer active:scale-95`,
-      `outline-1 outline-border hover:outline-border-hover active:outline-border-active`,
-      `hover:bg-background-hover active:bg-background-active`,
-      props.class,
-    )}
-    onclick={() => props.onClick()}
-  >
-    {props.children}
-  </button>
-);
+type ButtonProps = JSX.HTMLAttributes<HTMLButtonElement>;
+
+// my cooked asChild alternative
+export const buttonStyles = (className?: string) =>
+  cn(
+    `flex items-center justify-center rounded p-2 transition-all hover:cursor-pointer active:scale-[97.5%]`,
+    `outline-1 outline-border hover:outline-border-hover active:outline-border-active`,
+    `active:bg-button-active hover:bg-button-hover`,
+    className,
+  );
+
+export const Button = (props: ButtonProps) => {
+  const { children, class: className, ...others } = props;
+  return (
+    <button class={buttonStyles(className)} {...others}>
+      {children}
+    </button>
+  );
+};

@@ -28,10 +28,13 @@
   --color-ag-border: var(--ag-active);
   --color-background: var(--accent-1);
   --color-background-hover: var(--gray-a2);
-  --color-background-active: var(--gray-2);
+  --color-background-active: var(--accent-a2);
   --color-primary: var(--gray-12);
   --color-secondary: var(--gray-11);
   --color-tertiary: var(--gray-10);
+  --color-input: var(--accent-a2);
+  --color-button: var(--accent-a3);
+  --color-button-hover: var(--accent-a4);
 }
 
 :root {
@@ -47,6 +50,10 @@
 }
 
 @layer base {
+  * {
+    @apply optimize-legibility antialiased;
+  }
+
   hr {
     @apply text-border;
   }
