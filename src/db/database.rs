@@ -26,7 +26,7 @@ impl Database {
         let result = sqlx::query!(
             r#"
 SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map, is_tourney,
-team_one_name, team_two_name FROM match_data WHERE match = $1
+team_one_name, team_two_name, team_one_color, team_two_color FROM match_data WHERE match = $1
         "#,
             id as i32
         )
@@ -49,6 +49,8 @@ team_one_name, team_two_name FROM match_data WHERE match = $1
                     is_tourney: record.is_tourney == true,
                     team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
                     team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
+                    team_one_color: record.team_one_color.map(|n| n as u32),
+                    team_two_color: record.team_two_color.map(|n| n as u32)
                 })
             }
             Err(e) => {
@@ -68,7 +70,7 @@ team_one_name, team_two_name FROM match_data WHERE match = $1
         let result = sqlx::query!(
             r#"
 SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map,
-is_tourney, team_one_name, team_two_name FROM match_data WHERE start_time >= $1 AND start_time <= $2
+is_tourney, team_one_name, team_two_name, team_one_color, team_two_color FROM match_data WHERE start_time >= $1 AND start_time <= $2
         "#,
             start_time_millis,
             end_time_millis
@@ -93,6 +95,8 @@ is_tourney, team_one_name, team_two_name FROM match_data WHERE start_time >= $1 
                         is_tourney: record.is_tourney == true,
                         team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
                         team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
+                        team_one_color: record.team_one_color.map(|n| n as u32),
+                        team_two_color: record.team_two_color.map(|n| n as u32)
                     };
                     match_data.insert(record.r#match as u32, datum);
                 }
