@@ -15,7 +15,7 @@ async fn main() {
     let db = Arc::new(
         Database::new(
             std::env::var("GHAST_DATABASE_PATH")
-                .unwrap_or(String::from("postgres://postgres:secret@127.0.0.1:5432/stats"))
+                .unwrap_or(String::from("postgres:secret@127.0.0.1:5432/stats"))
                 .as_str(),
         )
         .await,

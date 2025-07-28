@@ -128,11 +128,15 @@ FROM player_match_data WHERE match = $1"#,
                 for record in &rows {
                     let id = {
                         let uuid_blob = record.player.clone();
-                        let s = from_utf8(&uuid_blob[..]).unwrap();
-                        Uuid::parse_str(s).unwrap()
+                        let s = if uuid_blob.len() == 16 {
+                            Uuid::from_bytes(Self::vec_as_arr(uuid_blob)).hyphenated().to_string()
+                        } else {
+                            from_utf8(&uuid_blob[..]).unwrap().to_string()
+                        };
+                        Uuid::parse_str(s.as_str()).unwrap()
                     };
                     let stats = PlayerFootballStats {
-                        team: record.team as i32,
+                        team: record.team,
                         kills: record.kills as u32,
                         deaths: record.deaths as u32,
                         assists: record.assists as u32,
@@ -164,15 +168,42 @@ FROM player_match_data WHERE match = $1"#,
         Some(player_stats)
     }
 
+    // scuffed need to fix it in the database later
     pub async fn get_username_from_uuid(&self, uuid: Uuid) -> Option<String> {
         let uuid_bytes = uuid.as_bytes().to_vec();
 
-        sqlx::query_scalar!(
+        let name = sqlx::query_scalar!(
             r#"SELECT name FROM player_identities WHERE uuid = $1"#,
             uuid_bytes.as_slice()
         )
         .fetch_optional(&self.connection_pool)
         .await
-        .ok()?
+        .ok().flatten();
+
+        if name.is_some() {
+            return name;
+        }
+
+        let uuid_hyphenated_string = uuid.hyphenated().to_string();
+        let uuid_bytes = uuid_hyphenated_string.as_bytes();
+        let name = sqlx::query_scalar!(
+            r#"SELECT name FROM player_identities WHERE uuid = $1"#,
+            uuid_bytes
+        ).fetch_optional(&self.connection_pool)
+            .await
+            .ok().flatten();
+
+        if name.is_some() {
+            return name;
+        }
+
+        None
+    }
+
+    fn vec_as_arr<T, const N: usize>(v: Vec<T>) -> [T; N] {
+        v.try_into()
+            .unwrap_or_else(
+                |v: Vec<T>| panic!("Expected a Vec of length {} but it was {}", N, v.len())
+            )
     }
 }
