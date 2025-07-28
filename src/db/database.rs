@@ -2,20 +2,21 @@ use crate::db::model::match_data::MatchData;
 use crate::db::model::player_match_stats::PlayerFootballStats;
 use chrono::{DateTime, Utc};
 use log::warn;
-use sqlx::{Pool, Sqlite, SqlitePool};
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres, Sqlite, SqlitePool};
 use std::collections::HashMap;
 use std::str::from_utf8;
 use uuid::Uuid;
 
 pub struct Database {
-    connection_pool: Pool<Sqlite>,
+    connection_pool: Pool<Postgres>,
 }
 
 impl Database {
     pub async fn new(database_path: &str) -> Self {
-        let pool = SqlitePool::connect(format!("sqlite:{database_path}").as_str())
-            .await
-            .unwrap();
+        let pool = PgPoolOptions::new()
+            .max_connections(4)
+            .connect(format!("postgres://{database_path}").as_str()).await.unwrap();
         Database {
             connection_pool: pool,
         }
@@ -25,9 +26,9 @@ impl Database {
         let result = sqlx::query!(
             r#"
 SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map, is_tourney,
-team_one_name, team_two_name FROM match_data WHERE match = ?1
+team_one_name, team_two_name FROM match_data WHERE match = $1
         "#,
-            id
+            id as i32
         )
         .fetch_all(&self.connection_pool)
         .await;
@@ -45,7 +46,7 @@ team_one_name, team_two_name FROM match_data WHERE match = ?1
                     team_one_score: record.team_one_score as u32,
                     team_two_score: record.team_two_score as u32,
                     map: record.map,
-                    is_tourney: record.is_tourney == 1i64,
+                    is_tourney: record.is_tourney == true,
                     team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
                     team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
                 })
@@ -67,7 +68,7 @@ team_one_name, team_two_name FROM match_data WHERE match = ?1
         let result = sqlx::query!(
             r#"
 SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map,
-is_tourney, team_one_name, team_two_name FROM match_data WHERE start_time >= ?1 AND start_time <= ?2
+is_tourney, team_one_name, team_two_name FROM match_data WHERE start_time >= $1 AND start_time <= $2
         "#,
             start_time_millis,
             end_time_millis
@@ -89,7 +90,7 @@ is_tourney, team_one_name, team_two_name FROM match_data WHERE start_time >= ?1 
                         team_one_score: record.team_one_score as u32,
                         team_two_score: record.team_two_score as u32,
                         map: record.map,
-                        is_tourney: record.is_tourney == 1i64,
+                        is_tourney: record.is_tourney == true,
                         team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
                         team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
                     };
@@ -113,8 +114,8 @@ is_tourney, team_one_name, team_two_name FROM match_data WHERE start_time >= ?1 
 SELECT player, team, kills, deaths, assists, killstreak, dmg_dealt, dmg_taken, pickups,
 throws, passes, catches, strips, touchdowns, touchdown_passes, passing_blocks, receive_blocks,
 defensive_interceptions, pass_interceptions, damage_carrier
-FROM player_match_data WHERE match = ?1"#,
-            match_id
+FROM player_match_data WHERE match = $1"#,
+            match_id as i32
         )
         .fetch_all(&self.connection_pool)
         .await;
@@ -164,11 +165,11 @@ FROM player_match_data WHERE match = ?1"#,
     }
 
     pub async fn get_username_from_uuid(&self, uuid: Uuid) -> Option<String> {
-        let uuid_string = uuid.hyphenated().to_string();
+        let uuid_bytes = uuid.as_bytes().to_vec();
 
         sqlx::query_scalar!(
-            r#"SELECT name FROM player_identities WHERE uuid = ?1"#,
-            uuid_string
+            r#"SELECT name FROM player_identities WHERE uuid = $1"#,
+            uuid_bytes.as_slice()
         )
         .fetch_optional(&self.connection_pool)
         .await
