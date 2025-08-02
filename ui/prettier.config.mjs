@@ -1,9 +1,9 @@
 import {
-  merge,
+  prettierConfig,
   prettierConfigBase,
   prettierConfigTailwind,
 } from '@hiddenability/opinionated-defaults/prettier';
 
-export default merge(prettierConfigBase, prettierConfigTailwind, {
+export default prettierConfig(prettierConfigBase, prettierConfigTailwind, {
   tailwindStylesheet: `./styles/main.css`,
 });
