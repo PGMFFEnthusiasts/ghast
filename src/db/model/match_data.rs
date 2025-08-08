@@ -13,5 +13,5 @@ pub struct MatchData {
     pub team_one_name: String,
     pub team_two_name: String,
     pub team_one_color: Option<u32>,
-    pub team_two_color: Option<u32>
+    pub team_two_color: Option<u32>,
 }

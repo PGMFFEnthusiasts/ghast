@@ -25,6 +25,20 @@ pub async fn get_recent_matches(state: &State<GhastApiState>) -> Json<Vec<Identi
     }
 }
 
+#[get("/all")]
+pub async fn get_all_matches(state: &State<GhastApiState>) -> Json<Vec<IdentifiedMatchData>> {
+    if let Some(matches) = state.database.get_matches_all().await {
+        return Json(
+            matches
+                .into_iter()
+                .map(|(id, data)| IdentifiedMatchData { id, data })
+                .collect(),
+        );
+    }
+
+    Json(Vec::new())
+}
+
 #[get("/<match_id>")]
 pub async fn get_match_data(
     match_id: u32,
@@ -116,6 +130,7 @@ pub fn mount(rocket_build: Rocket<Build>) -> Rocket<Build> {
     rocket_build.mount(
         "/matches",
         routes![
+            get_all_matches,
             get_recent_matches,
             get_match_data,
             get_player_stats_for_match,

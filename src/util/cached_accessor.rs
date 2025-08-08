@@ -5,9 +5,9 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tokio::task::JoinSet;
 
-pub trait KeyedDataAccessor<K, V> {
-    async fn get(&mut self, key: K) -> V;
-}
+// pub trait KeyedDataAccessor<K, V> {
+//     async fn get(&mut self, key: K) -> V;
+// }
 
 pub struct LoadingCacheDataAccessor<K, V> {
     pub loader: Arc<dyn Fn(K) -> Pin<Box<dyn Future<Output = Option<V>> + Send>> + Send + Sync>,
