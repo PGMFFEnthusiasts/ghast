@@ -8,6 +8,7 @@ const Stats = lazy(() => import(`@/pages/stats`));
 const Matches = lazy(() => import(`@/pages/matches`));
 const Lander = lazy(() => import(`@/pages/lander`));
 const DiscordPage = lazy(() => import(`@/pages/discord`));
+const PassPage = lazy(() => import(`@/pages/pass`));
 
 export const App = () => (
   <>
@@ -15,6 +16,7 @@ export const App = () => (
       <Route component={Stats} path='/matches/:id' />
       <Route component={Matches} path='/matches' />
       <Route component={DiscordPage} path='/discord' />
+      <Route component={PassPage} path='/pass' />
       <Route component={NotFoundPage} path='*404' />
       <Route component={Lander} path='/' />
     </Router>
