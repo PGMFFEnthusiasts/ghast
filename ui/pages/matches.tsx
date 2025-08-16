@@ -73,17 +73,20 @@ const Matches = (props: { matches: RecentMatches }) => {
           field: `data.map`,
           filter: true,
           headerName: `Map`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           valueFormatter: (v) => v.value.toUpperCase(),
         },
         {
           field: `data.server`,
           filter: true,
           headerName: `Server`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           valueFormatter: (v) => v.value.replace(`tombrady`, `primary`),
         },
         {
           field: `data.start_time`,
           headerName: `Start Time`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           valueFormatter: (v) => capitalize(formatReallyLongTime(v.value)),
           width: 400,
         },
@@ -91,6 +94,7 @@ const Matches = (props: { matches: RecentMatches }) => {
           field: `data.duration`,
           filter: true,
           headerName: `Duration`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           valueFormatter: (v) => formatNumericalDuration(v.value),
         },
         {

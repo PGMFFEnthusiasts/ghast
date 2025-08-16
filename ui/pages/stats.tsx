@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { A, useParams } from '@solidjs/router';
 import {
   type CellKeyDownEvent,
@@ -73,7 +74,9 @@ const Stats = (props: { data: Uber }) => {
   let theGrid: HTMLDivElement;
 
   const teamNames = [
+    // eslint-disable-next-line solid/reactivity
     props.data.data.team_one_name,
+    // eslint-disable-next-line solid/reactivity
     props.data.data.team_two_name,
   ];
 
@@ -114,11 +117,13 @@ const Stats = (props: { data: Uber }) => {
         {
           field: `stats.damage_dealt`,
           headerName: `DMG Out`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           valueFormatter: (v) => v.value.toFixed(2),
         },
         {
           field: `stats.damage_taken`,
           headerName: `DMG In`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           valueFormatter: (v) => v.value.toFixed(2),
         },
         { field: `stats.pickups`, headerName: `Pickups` },
@@ -141,6 +146,7 @@ const Stats = (props: { data: Uber }) => {
         {
           field: `stats.damage_carrier`,
           headerName: `DMG Carrier`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           valueFormatter: (v) => v.value.toFixed(2),
         },
         {
@@ -172,7 +178,7 @@ const Stats = (props: { data: Uber }) => {
         rowNodes: [e.node],
       });
 
-      navigator.clipboard.writeText(ev.value ?? ``);
+      void navigator.clipboard.writeText(ev.value ?? ``);
     });
 
     setCurrentGrid(grid);
@@ -226,7 +232,7 @@ const Stats = (props: { data: Uber }) => {
           const grid = currentGrid();
           if (!grid) return;
 
-          navigator.clipboard.writeText(grid.getDataAsCsv() ?? ``);
+          void navigator.clipboard.writeText(grid.getDataAsCsv() ?? ``);
           toast.success(`CSV copied to the clipboard`);
         }}
       >

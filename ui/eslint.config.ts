@@ -4,9 +4,10 @@ import {
   eslintConfigBase,
   eslintConfigPerfectionist,
   eslintConfigPrettier,
+  eslintConfigRelative,
   eslintConfigSolid,
 } from '@hiddenability/opinionated-defaults/eslint';
-import { fileURLToPath, URL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const gitignorePath = fileURLToPath(new URL(`.gitignore`, import.meta.url));
 
@@ -16,4 +17,10 @@ export default eslintConfig([
   ...eslintConfigPerfectionist,
   ...eslintConfigPrettier,
   ...eslintConfigSolid,
+  ...eslintConfigRelative,
+  {
+    rules: {
+      '@typescript-eslint/no-unsafe-argument': `warn`,
+    },
+  },
 ]);

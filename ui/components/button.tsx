@@ -1,4 +1,4 @@
-import type { JSX } from 'solid-js';
+import { type JSX, splitProps } from 'solid-js';
 
 import { cn } from '@/utils/cn';
 
@@ -14,10 +14,6 @@ export const buttonStyles = (className?: string) =>
   );
 
 export const Button = (props: ButtonProps) => {
-  const { children, class: className, ...others } = props;
-  return (
-    <button class={buttonStyles(className)} {...others}>
-      {children}
-    </button>
-  );
+  const [localProps, otherProps] = splitProps(props, [`class`]);
+  return <button class={buttonStyles(localProps.class)} {...otherProps} />;
 };

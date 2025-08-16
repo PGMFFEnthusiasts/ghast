@@ -32,6 +32,7 @@ export const BradyGPT = (props: { content: string }) => {
   const [thinkingTime, setThinkingTime] = createSignal(0);
   let responseBox: HTMLDivElement;
 
+  // eslint-disable-next-line solid/reactivity
   const content = Math.random() < 0.2 ? props.content + help : props.content;
   const remaining = content.replace(`$DISCORD`, discordLink).split(/([\n\s])/);
 
@@ -71,10 +72,10 @@ export const BradyGPT = (props: { content: string }) => {
       </Show>
       <Show when={currentMarkdown().length === 0 && thinkingTime() !== 0}>
         <div class='animate-pulse'>
-          <div class='mb-4 h-2.5 w-24 rounded-full bg-gray-200 dark:bg-gray-700'></div>
-          <div class='mb-2.5 h-2 max-w-[360px] rounded-full bg-gray-200 dark:bg-gray-700'></div>
-          <div class='mb-2.5 h-2 rounded-full bg-gray-200 dark:bg-gray-700'></div>
-          <div class='mb-2.5 h-2 max-w-[330px] rounded-full bg-gray-200 dark:bg-gray-700'></div>
+          <div class='mb-4 h-2.5 w-24 rounded-full bg-gray-200 dark:bg-gray-700' />
+          <div class='mb-2.5 h-2 max-w-[360px] rounded-full bg-gray-200 dark:bg-gray-700' />
+          <div class='mb-2.5 h-2 rounded-full bg-gray-200 dark:bg-gray-700' />
+          <div class='mb-2.5 h-2 max-w-[330px] rounded-full bg-gray-200 dark:bg-gray-700' />
         </div>
       </Show>
       <div class='brady-prose' ref={responseBox!} />

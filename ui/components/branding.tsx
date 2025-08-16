@@ -36,7 +36,7 @@ export const ServerFacts = () => (
           class='rounded bg-gray-200 px-2 font-mono font-bold select-all'
           onClick={() => {
             toast.success(`Copied IP to clipboard`);
-            navigator.clipboard.writeText(`tombrady.fireballs.me`);
+            void navigator.clipboard.writeText(`tombrady.fireballs.me`);
           }}
         >
           tombrady.fireballs.me
