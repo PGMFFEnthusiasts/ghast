@@ -60,13 +60,11 @@ const Matches = (props: { matches: RecentMatches }) => {
     ]);
 
     const grid = createGrid(theGrid!, {
-      autoSizeStrategy: { type: `fitGridWidth` },
       columnDefs: [
         {
           cellRenderer: linkCellRenderer,
           field: `id`,
           headerName: `#`,
-          suppressSizeToFit: false,
           width: 40,
         },
         {
@@ -82,11 +80,13 @@ const Matches = (props: { matches: RecentMatches }) => {
           field: `data.map`,
           filter: true,
           headerName: `Map`,
+          minWidth: 300,
           valueFormatter: (v: { value: string }) => v.value.toUpperCase(),
         },
         {
           headerName: `Score`,
           sortable: false,
+          suppressSizeToFit: false,
           valueFormatter: (v) =>
             `${v.data?.data.team_one_score} - ${v.data?.data.team_two_score}`,
           width: 60,
@@ -103,10 +103,18 @@ const Matches = (props: { matches: RecentMatches }) => {
         {
           field: `data.start_time`,
           headerName: `Start Time`,
+          minWidth: 340,
           valueFormatter: (v: { value: number }) =>
             capitalize(formatReallyLongTime(v.value)),
         },
       ],
+      onGridReady: (ctx) => {
+        if (window.innerWidth >= 1280) {
+          ctx.api.sizeColumnsToFit();
+        } else {
+          ctx.api.autoSizeAllColumns();
+        }
+      },
       pagination: true,
       rowData: props.matches.sort((a, b) => b.id - a.id),
       suppressDragLeaveHidesColumns: true,
@@ -119,7 +127,7 @@ const Matches = (props: { matches: RecentMatches }) => {
   });
 
   return (
-    <div class='container mx-auto flex h-screen max-h-screen flex-col space-y-4 p-8'>
+    <div class='container mx-auto flex h-screen flex-col space-y-4 p-4 xl:p-8'>
       <div class='flex flex-col'>
         <A
           class='group text-primary/60 transition-colors duration-200 hover:text-primary'
