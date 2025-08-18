@@ -149,7 +149,7 @@ const Matches = (props: { matches: RecentMatches }) => {
       <hr />
       <div class='flex-1'>
         <div
-          class='h-full'
+          class='!ag-grid-issue-9239 h-full'
           data-ag-theme-mode={theme().replace(`dark`, `dark-blue`)}
           ref={theGrid!}
         />
