@@ -9,6 +9,7 @@ import {
   type ICellRendererParams,
   ModuleRegistry,
   NumberFilterModule,
+  PaginationModule,
   TextFilterModule,
 } from 'ag-grid-community';
 import { createResource, onMount, Show, Suspense } from 'solid-js';
@@ -27,7 +28,7 @@ import { useTheme } from '@/utils/use-theme';
 const getData = async (): Promise<RecentMatches> => {
   const apiRoot =
     import.meta.env.VITE_API_ROOT ?? `https://tombrady.fireballs.me/api/`;
-  const res = await fetch(apiRoot + `matches/recent`);
+  const res = await fetch(new URL(`matches/all`, apiRoot));
   if (res.status !== 200) return [];
   return (await res.json()) as RecentMatches;
 };
@@ -50,6 +51,7 @@ const Matches = (props: { matches: RecentMatches }) => {
     ModuleRegistry.registerModules([
       ColumnAutoSizeModule,
       HighlightChangesModule,
+      PaginationModule,
       TextFilterModule,
       NumberFilterModule,
       CsvExportModule,
@@ -58,53 +60,62 @@ const Matches = (props: { matches: RecentMatches }) => {
     ]);
 
     const grid = createGrid(theGrid!, {
-      autoSizeStrategy: {
-        defaultMinWidth: 100,
-        type: `fitGridWidth`,
-      },
       columnDefs: [
         {
           cellRenderer: linkCellRenderer,
           field: `id`,
           headerName: `#`,
-          width: 80,
-        },
-        {
-          field: `data.map`,
-          filter: true,
-          headerName: `Map`,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-          valueFormatter: (v) => v.value.toUpperCase(),
+          width: 40,
         },
         {
           field: `data.server`,
           filter: true,
           headerName: `Server`,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-          valueFormatter: (v) => v.value.replace(`tombrady`, `primary`),
+          suppressSizeToFit: false,
+          valueFormatter: (v: { value: string }) =>
+            v.value.replace(`tombrady`, `primary`),
+          width: 60,
         },
         {
-          field: `data.start_time`,
-          headerName: `Start Time`,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          valueFormatter: (v) => capitalize(formatReallyLongTime(v.value)),
-          width: 400,
+          field: `data.map`,
+          filter: true,
+          headerName: `Map`,
+          minWidth: 300,
+          valueFormatter: (v: { value: string }) => v.value.toUpperCase(),
+        },
+        {
+          headerName: `Score`,
+          sortable: false,
+          suppressSizeToFit: false,
+          valueFormatter: (v) =>
+            `${v.data?.data.team_one_score} - ${v.data?.data.team_two_score}`,
+          width: 60,
         },
         {
           field: `data.duration`,
           filter: true,
           headerName: `Duration`,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          valueFormatter: (v) => formatNumericalDuration(v.value),
+          suppressSizeToFit: false,
+          valueFormatter: (v: { value: number }) =>
+            formatNumericalDuration(v.value),
+          width: 60,
         },
         {
-          headerName: `Score`,
-          sortable: false,
-          valueFormatter: (v) =>
-            `${v.data?.data.team_one_score} - ${v.data?.data.team_two_score}`,
+          field: `data.start_time`,
+          headerName: `Start Time`,
+          minWidth: 340,
+          valueFormatter: (v: { value: number }) =>
+            capitalize(formatReallyLongTime(v.value)),
         },
       ],
-      domLayout: `autoHeight`,
+      onGridReady: (ctx) => {
+        if (window.innerWidth >= 1280) {
+          ctx.api.sizeColumnsToFit();
+        } else {
+          ctx.api.autoSizeAllColumns();
+        }
+      },
+      pagination: true,
       rowData: props.matches.sort((a, b) => b.id - a.id),
       suppressDragLeaveHidesColumns: true,
       theme: gridTheme,
@@ -116,8 +127,8 @@ const Matches = (props: { matches: RecentMatches }) => {
   });
 
   return (
-    <div class='container mx-auto flex min-h-screen flex-col space-y-4 p-2 xl:p-4'>
-      <div>
+    <div class='container mx-auto flex h-screen flex-col space-y-4 p-4 xl:p-8'>
+      <div class='flex flex-col'>
         <A
           class='group text-primary/60 transition-colors duration-200 hover:text-primary'
           href='/'
@@ -138,7 +149,7 @@ const Matches = (props: { matches: RecentMatches }) => {
       <hr />
       <div class='flex-1'>
         <div
-          class='h-full'
+          class='!ag-grid-issue-9239 h-full'
           data-ag-theme-mode={theme().replace(`dark`, `dark-blue`)}
           ref={theGrid!}
         />

@@ -1,2 +1,6 @@
 /target
 .direnv/
+dump.sql
+.dev/
+docker-compose.yml
+.env.development

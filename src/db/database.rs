@@ -3,7 +3,7 @@ use crate::db::model::player_match_stats::PlayerFootballStats;
 use chrono::{DateTime, Utc};
 use log::warn;
 use sqlx::postgres::PgPoolOptions;
-use sqlx::{Pool, Postgres, Sqlite, SqlitePool};
+use sqlx::{Pool, Postgres};
 use std::collections::HashMap;
 use std::str::from_utf8;
 use uuid::Uuid;
@@ -16,7 +16,9 @@ impl Database {
     pub async fn new(database_path: &str) -> Self {
         let pool = PgPoolOptions::new()
             .max_connections(4)
-            .connect(format!("postgres://{database_path}").as_str()).await.unwrap();
+            .connect(format!("postgres://{database_path}").as_str())
+            .await
+            .unwrap();
         Database {
             connection_pool: pool,
         }
@@ -25,8 +27,10 @@ impl Database {
     pub async fn get_match_by_id(&self, id: u32) -> Option<MatchData> {
         let result = sqlx::query!(
             r#"
-SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map, is_tourney,
-team_one_name, team_two_name, team_one_color, team_two_color FROM match_data WHERE match = $1
+SELECT match, server, start_time, duration, winner, team_one_score, team_two_score,
+     map, is_tourney, team_one_name, team_two_name, team_one_color, team_two_color
+FROM match_data
+WHERE match = $1
         "#,
             id as i32
         )
@@ -42,16 +46,58 @@ team_one_name, team_two_name, team_one_color, team_two_color FROM match_data WHE
                     server: record.server,
                     start_time: record.start_time as u64,
                     duration: record.duration as u32,
-                    winner: record.winner as i32,
+                    winner: record.winner,
                     team_one_score: record.team_one_score as u32,
                     team_two_score: record.team_two_score as u32,
                     map: record.map,
-                    is_tourney: record.is_tourney == true,
+                    is_tourney: record.is_tourney,
                     team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
                     team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
                     team_one_color: record.team_one_color.map(|n| n as u32),
-                    team_two_color: record.team_two_color.map(|n| n as u32)
+                    team_two_color: record.team_two_color.map(|n| n as u32),
                 })
+            }
+            Err(e) => {
+                warn!("Error retrieving matches {e:?}");
+                None
+            }
+        }
+    }
+
+    pub async fn get_matches_all(&self) -> Option<HashMap<u32, MatchData>> {
+        let result = sqlx::query!(
+            r#"
+SELECT match, server, start_time, duration, winner, team_one_score, team_two_score,
+     map, is_tourney, team_one_name, team_two_name, team_one_color, team_two_color
+FROM match_data
+ORDER BY start_time DESC"#,
+        )
+        .fetch_all(&self.connection_pool)
+        .await;
+        let mut match_data: HashMap<u32, MatchData> = HashMap::new();
+        match result {
+            Ok(records) => {
+                if records.is_empty() {
+                    return None;
+                }
+                for record in records {
+                    let datum = MatchData {
+                        server: record.server,
+                        start_time: record.start_time as u64,
+                        duration: record.duration as u32,
+                        winner: record.winner,
+                        team_one_score: record.team_one_score as u32,
+                        team_two_score: record.team_two_score as u32,
+                        map: record.map,
+                        is_tourney: record.is_tourney,
+                        team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
+                        team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
+                        team_one_color: record.team_one_color.map(|n| n as u32),
+                        team_two_color: record.team_two_color.map(|n| n as u32),
+                    };
+                    match_data.insert(record.r#match as u32, datum);
+                }
+                Some(match_data)
             }
             Err(e) => {
                 warn!("Error retrieving matches {e:?}");
@@ -69,9 +115,10 @@ team_one_name, team_two_name, team_one_color, team_two_color FROM match_data WHE
         let end_time_millis = end_time.timestamp_millis();
         let result = sqlx::query!(
             r#"
-SELECT match, server, start_time, duration, winner, team_one_score, team_two_score, map,
-is_tourney, team_one_name, team_two_name, team_one_color, team_two_color FROM match_data WHERE start_time >= $1 AND start_time <= $2
-        "#,
+SELECT match, server, start_time, duration, winner, team_one_score, team_two_score,
+     map, is_tourney, team_one_name, team_two_name, team_one_color, team_two_color
+FROM match_data
+WHERE start_time >= $1 AND start_time <= $2"#,
             start_time_millis,
             end_time_millis
         )
@@ -88,15 +135,15 @@ is_tourney, team_one_name, team_two_name, team_one_color, team_two_color FROM ma
                         server: record.server,
                         start_time: record.start_time as u64,
                         duration: record.duration as u32,
-                        winner: record.winner as i32,
+                        winner: record.winner,
                         team_one_score: record.team_one_score as u32,
                         team_two_score: record.team_two_score as u32,
                         map: record.map,
-                        is_tourney: record.is_tourney == true,
+                        is_tourney: record.is_tourney,
                         team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
                         team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
                         team_one_color: record.team_one_color.map(|n| n as u32),
-                        team_two_color: record.team_two_color.map(|n| n as u32)
+                        team_two_color: record.team_two_color.map(|n| n as u32),
                     };
                     match_data.insert(record.r#match as u32, datum);
                 }
@@ -118,7 +165,8 @@ is_tourney, team_one_name, team_two_name, team_one_color, team_two_color FROM ma
 SELECT player, team, kills, deaths, assists, killstreak, dmg_dealt, dmg_taken, pickups,
 throws, passes, catches, strips, touchdowns, touchdown_passes, passing_blocks, receive_blocks,
 defensive_interceptions, pass_interceptions, damage_carrier
-FROM player_match_data WHERE match = $1"#,
+FROM player_match_data
+WHERE match = $1"#,
             match_id as i32
         )
         .fetch_all(&self.connection_pool)
@@ -133,7 +181,9 @@ FROM player_match_data WHERE match = $1"#,
                     let id = {
                         let uuid_blob = record.player.clone();
                         let s = if uuid_blob.len() == 16 {
-                            Uuid::from_bytes(Self::vec_as_arr(uuid_blob)).hyphenated().to_string()
+                            Uuid::from_bytes(Self::vec_as_arr(uuid_blob))
+                                .hyphenated()
+                                .to_string()
                         } else {
                             from_utf8(&uuid_blob[..]).unwrap().to_string()
                         };
@@ -172,7 +222,6 @@ FROM player_match_data WHERE match = $1"#,
         Some(player_stats)
     }
 
-    // scuffed need to fix it in the database later
     pub async fn get_username_from_uuid(&self, uuid: Uuid) -> Option<String> {
         let uuid_bytes = uuid.as_bytes().to_vec();
 
@@ -182,7 +231,8 @@ FROM player_match_data WHERE match = $1"#,
         )
         .fetch_optional(&self.connection_pool)
         .await
-        .ok().flatten();
+        .ok()
+        .flatten();
 
         if name.is_some() {
             return name;
@@ -193,9 +243,11 @@ FROM player_match_data WHERE match = $1"#,
         let name = sqlx::query_scalar!(
             r#"SELECT name FROM player_identities WHERE uuid = $1"#,
             uuid_bytes
-        ).fetch_optional(&self.connection_pool)
-            .await
-            .ok().flatten();
+        )
+        .fetch_optional(&self.connection_pool)
+        .await
+        .ok()
+        .flatten();
 
         if name.is_some() {
             return name;
@@ -205,9 +257,8 @@ FROM player_match_data WHERE match = $1"#,
     }
 
     fn vec_as_arr<T, const N: usize>(v: Vec<T>) -> [T; N] {
-        v.try_into()
-            .unwrap_or_else(
-                |v: Vec<T>| panic!("Expected a Vec of length {} but it was {}", N, v.len())
-            )
+        v.try_into().unwrap_or_else(|v: Vec<T>| {
+            panic!("Expected a Vec of length {} but it was {}", N, v.len())
+        })
     }
 }

@@ -20,6 +20,23 @@
   --ag-value-change-value-highlight-background-color: var(--green-500);
 }
 
+@utility ag-grid-issue-9239 {
+  .ag-paging-panel {
+    height: auto;
+    flex-wrap: wrap-reverse;
+    row-gap: 1rem;
+    padding: 0.25rem;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 768px) {
+    .ag-paging-panel {
+      justify-content: center;
+    }
+  }
+}
+
 @theme inline {
   --color-border: var(--gray-a6);
   --color-border-hover: var(--gray-a7);

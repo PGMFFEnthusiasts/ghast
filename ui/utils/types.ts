@@ -7,6 +7,7 @@ export type MatchData = {
   duration: number;
   is_tourney: boolean;
   map: string;
+  players: PlayerStats;
   server: string;
   start_time: number;
   team_one_name: string;
