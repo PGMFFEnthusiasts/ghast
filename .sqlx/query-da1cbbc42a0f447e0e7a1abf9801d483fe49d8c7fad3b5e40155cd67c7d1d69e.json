@@ -1,0 +1,101 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n     SELECT m.match, m.server, m.start_time, m.duration, m.winner, m.team_one_score, m.team_two_score,\n       m.map, m.is_tourney, m.team_one_name, m.team_two_name, m.team_one_color, m.team_two_color,\n       COALESCE(ARRAY_REMOVE(ARRAY_AGG(p.player), NULL), '{}'::bytea[]) players\n     FROM match_data m LEFT JOIN player_match_data p ON m.match = p.match\n     WHERE m.start_time >= $1 AND m.start_time <= $2\n     GROUP BY m.match\n     ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "match",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "server",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "start_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "duration",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "winner",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "team_one_score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "team_two_score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "map",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "is_tourney",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "team_one_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "team_two_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "team_one_color",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "team_two_color",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "players",
+        "type_info": "ByteaArray"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "da1cbbc42a0f447e0e7a1abf9801d483fe49d8c7fad3b5e40155cd67c7d1d69e"
+}

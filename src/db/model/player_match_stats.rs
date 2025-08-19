@@ -2,7 +2,7 @@ use rocket::serde::Serialize;
 use serde::Deserialize;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PlayerFootballStats {
+pub struct PlayerMatchStats {
     pub team: i32,
     pub kills: u32,
     pub deaths: u32,

@@ -1,13 +1,13 @@
 export type Match = {
   data: MatchData;
   id: number;
+  players: string[];
 };
 
 export type MatchData = {
   duration: number;
   is_tourney: boolean;
   map: string;
-  players: PlayerStats;
   server: string;
   start_time: number;
   team_one_name: string;
@@ -17,15 +17,18 @@ export type MatchData = {
   winner: number;
 };
 
+export type Matches = Match[];
+
 export type Player = {
-  stats: Stats;
   username: string;
   uuid: string;
 };
 
-export type PlayerStats = Player[];
+export type PlayerData = Player & {
+  stats: Stats;
+};
 
-export type RecentMatches = Match[];
+export type PlayerStats = PlayerData[];
 
 export type Stats = {
   assists: number;
