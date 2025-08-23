@@ -53,7 +53,7 @@
             [
               pkgs.bacon
               pkgs.postgresql_18
-              (f.complete.withComponents [
+              (f.latest.withComponents [
                 "cargo"
                 "clippy"
                 "rust-src"
