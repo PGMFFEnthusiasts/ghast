@@ -1,129 +1,57 @@
-use crate::db::model::match_data::MatchData;
-use crate::db::model::player_match_stats::PlayerFootballStats;
 use crate::web::api::GhastApiState;
+use crate::web::routes::utils::{get_match_player_stats, get_matches, get_uber_data};
+use crate::web::types::{MatchApi, MatchPlayerApi, PlayerlessMatchApi, UberApi};
+use ::std::ops::Sub;
 use chrono::{TimeDelta, Utc};
 use rocket::serde::json::Json;
 use rocket::{Build, Rocket, State, get, routes};
-use serde::{Deserialize, Serialize};
-use std::ops::Sub;
-
-#[get("/recent")]
-pub async fn get_recent_matches(state: &State<GhastApiState>) -> Json<Vec<IdentifiedMatchData>> {
-    let matches_option = state
-        .database
-        .get_matches_timespan(Utc::now().sub(TimeDelta::days(3)), Utc::now())
-        .await;
-    match matches_option {
-        Some(matches) => {
-            let mut result: Vec<IdentifiedMatchData> = Vec::new();
-            for (id, data) in matches.into_iter() {
-                result.push(IdentifiedMatchData { id, data });
-            }
-            Json(result)
-        }
-        None => Json(Vec::new()),
-    }
-}
 
 #[get("/all")]
-pub async fn get_all_matches(state: &State<GhastApiState>) -> Json<Vec<IdentifiedMatchData>> {
+pub async fn get_all_matches(state: &State<GhastApiState>) -> Json<MatchApi> {
     if let Some(matches) = state.database.get_matches_all().await {
-        return Json(
-            matches
-                .into_iter()
-                .map(|(id, data)| IdentifiedMatchData { id, data })
-                .collect(),
-        );
+        return get_matches(state, matches).await;
+    }
+
+    Json(Vec::new())
+}
+
+#[get("/recent")]
+pub async fn get_recent_matches(state: &State<GhastApiState>) -> Json<MatchApi> {
+    if let Some(matches) = state
+        .database
+        .get_matches_between(Utc::now().sub(TimeDelta::days(3)), Utc::now())
+        .await
+    {
+        return get_matches(state, matches).await;
     }
 
     Json(Vec::new())
 }
 
 #[get("/<match_id>")]
-pub async fn get_match_data(
+pub async fn get_match_from_id(
     match_id: u32,
     state: &State<GhastApiState>,
-) -> Json<Option<IdentifiedMatchData>> {
+) -> Json<Option<PlayerlessMatchApi>> {
     let data = state.database.get_match_by_id(match_id).await;
-    Json(data.map(|data| IdentifiedMatchData { id: match_id, data }))
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct IdentifiedMatchData {
-    id: u32,
-    data: MatchData,
+    Json(data.map(|data| PlayerlessMatchApi { id: match_id, data }))
 }
 
 #[get("/<match_id>/uber")]
-pub async fn get_match_uber(
-    match_id: u32,
-    state: &State<GhastApiState>,
-) -> Json<Option<UberIdentifiedMatchData>> {
+pub async fn get_match_uber(match_id: u32, state: &State<GhastApiState>) -> Json<Option<UberApi>> {
     return Json(get_uber_data(match_id, state).await);
-}
-
-async fn get_uber_data(
-    match_id: u32,
-    state: &State<GhastApiState>,
-) -> Option<UberIdentifiedMatchData> {
-    let data = state.database.get_match_by_id(match_id).await?;
-    let players = get_identified_player_match_stats(match_id, state).await;
-    Some(UberIdentifiedMatchData {
-        id: match_id,
-        data,
-        players: players.unwrap_or(vec![]),
-    })
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct UberIdentifiedMatchData {
-    id: u32,
-    data: MatchData,
-    players: Vec<IdentifiedPlayerMatchStats>,
 }
 
 #[get("/<match_id>/player_stats")]
 pub async fn get_player_stats_for_match(
     match_id: u32,
     state: &State<GhastApiState>,
-) -> Json<Vec<IdentifiedPlayerMatchStats>> {
-    if let Some(v) = get_identified_player_match_stats(match_id, state).await {
-        return Json(v);
+) -> Option<Json<MatchPlayerApi>> {
+    if let Some(v) = get_match_player_stats(match_id, state).await {
+        return Some(Json(v));
     };
 
-    Json(vec![])
-}
-
-async fn get_identified_player_match_stats(
-    match_id: u32,
-    state: &State<GhastApiState>,
-) -> Option<Vec<IdentifiedPlayerMatchStats>> {
-    let matches = state.database.get_player_match_stats(match_id).await?;
-    let mut match_player_stats: Vec<IdentifiedPlayerMatchStats> = Vec::new();
-    let mut lock = state.username_resolver.lock().await;
-    let keys = matches.keys().cloned().collect::<Vec<_>>();
-    let username_map = lock.resolve_batch(keys).await;
-    for (uuid, stats) in matches.into_iter() {
-        let username = username_map
-            .get(&uuid)
-            .cloned()
-            .flatten()
-            .unwrap_or(String::from("Unknown"))
-            .to_owned();
-        match_player_stats.push(IdentifiedPlayerMatchStats {
-            username,
-            uuid: uuid.to_string(),
-            stats,
-        });
-    }
-    Some(match_player_stats)
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct IdentifiedPlayerMatchStats {
-    username: String,
-    uuid: String,
-    stats: PlayerFootballStats,
+    None
 }
 
 pub fn mount(rocket_build: Rocket<Build>) -> Rocket<Build> {
@@ -132,7 +60,7 @@ pub fn mount(rocket_build: Rocket<Build>) -> Rocket<Build> {
         routes![
             get_all_matches,
             get_recent_matches,
-            get_match_data,
+            get_match_from_id,
             get_player_stats_for_match,
             get_match_uber,
         ],
