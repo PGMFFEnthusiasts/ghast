@@ -1,20 +1,21 @@
 import { A } from '@solidjs/router';
 import {
-  ClientSideRowModelModule,
   ColumnAutoSizeModule,
   createGrid,
   CsvExportModule,
   DateFilterModule,
   EventApiModule,
   HighlightChangesModule,
+  InfiniteRowModelModule,
   ModuleRegistry,
   NumberFilterModule,
   PaginationModule,
   TextFilterModule,
+  ValidationModule,
 } from 'ag-grid-community';
-import { createResource, onMount, Show, Suspense } from 'solid-js';
+import { onMount } from 'solid-js';
 
-import type { Match, Matches, Player } from '@/utils/types';
+import type { Match, PaginatedMatches, Player } from '@/utils/types';
 
 import {
   capitalize,
@@ -25,26 +26,36 @@ import {
 import { gridTheme } from '@/utils/grid';
 import { useTheme } from '@/utils/use-theme';
 
-const getData = async (): Promise<Matches> => {
+const getData = async (
+  offset: number,
+  pageSize: number,
+): Promise<PaginatedMatches> => {
   const apiRoot =
     import.meta.env.VITE_API_ROOT ?? `https://tombrady.fireballs.me/api/`;
-  const res = await fetch(new URL(`matches/all`, apiRoot));
-  if (res.status !== 200) return [];
-  return (await res.json()) as Matches;
+  const res = await fetch(
+    new URL(`matches/paginated?offset=${offset}&pagesize=${pageSize}`, apiRoot),
+  );
+  if (res.status !== 200) return { matches: [], total_matches: 0 };
+  const json_data = (await res.json()) as PaginatedMatches;
+  return json_data;
 };
 
 // like yeah ik theres the type for this but like idc ts is not good
-const linkCellRenderer = (params: { data: Match }) => html`
-  <a
-    href="/matches/${params.data.id.toString()}"
-    class="text-blue-500 underline decoration-dotted"
-  >
-    #${params.data.id}
-  </a>
-`;
+const linkCellRenderer = (params: { data: Match }) =>
+  params.data ?
+    html`
+      <a
+        href="/matches/${params.data.id.toString()}"
+        class="text-blue-500 underline decoration-dotted"
+      >
+        #${params.data.id}
+      </a>
+    `
+  : ``;
 
 // same here
 const playersCellRenderer = (params: { data: { players: Player[] } }) => {
+  if (!params.data) return ``;
   const div = document.createElement(`div`);
   div.setAttribute(
     `class`,
@@ -95,7 +106,7 @@ const playerFilter = (params: {
     params.value.map((player) => player.username).join(`, `)
   : ``;
 
-const MatchesGrid = (props: { matches: Matches }) => {
+const MatchesGrid = () => {
   let theGrid: HTMLDivElement;
 
   const theme = useTheme();
@@ -106,14 +117,16 @@ const MatchesGrid = (props: { matches: Matches }) => {
       HighlightChangesModule,
       PaginationModule,
       DateFilterModule,
+      InfiniteRowModelModule,
       TextFilterModule,
       NumberFilterModule,
       CsvExportModule,
       EventApiModule,
-      ClientSideRowModelModule,
+      ValidationModule,
     ]);
 
     const grid = createGrid(theGrid!, {
+      cacheBlockSize: 50,
       columnDefs: [
         {
           cellRenderer: linkCellRenderer,
@@ -129,7 +142,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
           minWidth: 120,
           suppressSizeToFit: false,
           valueFormatter: (v: { value: string }) =>
-            v.value.replace(`tombrady`, `primary`),
+            v.value?.replace(`tombrady`, `primary`),
           width: 120,
         },
         {
@@ -140,7 +153,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
             valueFormatter: playerFilter,
           },
           headerName: `Players`,
-          keyCreator: (p: { value: { username: string } }) => p.value.username,
+          keyCreator: (p: { value: { username: string } }) => p.value?.username,
           minWidth: 300,
           sortable: false,
           valueFormatter: playerFilter,
@@ -150,7 +163,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
           filter: true,
           headerName: `Map`,
           minWidth: 300,
-          valueFormatter: (v: { value: string }) => v.value.toUpperCase(),
+          valueFormatter: (v: { value: string }) => v.value?.toUpperCase(),
           width: 300,
         },
         {
@@ -159,7 +172,9 @@ const MatchesGrid = (props: { matches: Matches }) => {
           sortable: false,
           suppressSizeToFit: false,
           valueFormatter: (v) =>
-            `${v.data?.data.team_one_score} - ${v.data?.data.team_two_score}`,
+            v.data ?
+              `${v.data.data.team_one_score} - ${v.data.data.team_two_score}`
+            : ``,
           width: 100,
         },
         {
@@ -169,7 +184,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
           minWidth: 120,
           suppressSizeToFit: false,
           valueFormatter: (v: { value: number }) =>
-            formatNumericalDuration(v.value),
+            v.value ? formatNumericalDuration(v.value) : ``,
           width: 120,
         },
         {
@@ -178,9 +193,23 @@ const MatchesGrid = (props: { matches: Matches }) => {
           headerName: `Start Time`,
           minWidth: 340,
           valueFormatter: (v: { value: number }) =>
-            capitalize(formatReallyLongTime(v.value)),
+            v.value ? capitalize(formatReallyLongTime(v.value)) : ``,
         },
       ],
+      datasource: {
+        getRows: async (params) => {
+          const pageSize = params.endRow - params.startRow;
+          const offset = params.startRow;
+
+          const { matches, total_matches: totalMatches } = await getData(
+            offset,
+            pageSize,
+          );
+          const sortedMatches = matches.sort((a, b) => b.id - a.id);
+
+          params.successCallback(sortedMatches, totalMatches);
+        },
+      },
       onGridReady: (ctx) => {
         if (window.innerWidth >= 1280) {
           ctx.api.sizeColumnsToFit();
@@ -188,9 +217,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
           ctx.api.autoSizeAllColumns();
         }
       },
-      pagination: true,
-      paginationPageSize: 20,
-      rowData: props.matches.sort((a, b) => b.id - a.id),
+      rowModelType: `infinite`,
       suppressDragLeaveHidesColumns: true,
       theme: gridTheme,
     });
@@ -232,21 +259,5 @@ const MatchesGrid = (props: { matches: Matches }) => {
   );
 };
 
-const MatchesPage = () => {
-  const [matches] = createResource<Matches>(() => getData());
-
-  return (
-    <>
-      <Suspense>
-        <Show when={!matches()}>
-          <div>not found / invalid data</div>
-        </Show>
-        <Show when={matches()}>
-          <MatchesGrid matches={matches()!} />
-        </Show>
-      </Suspense>
-    </>
-  );
-};
-
+const MatchesPage = () => <MatchesGrid />;
 export default MatchesPage;

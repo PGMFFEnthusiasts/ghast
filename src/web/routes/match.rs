@@ -1,6 +1,6 @@
 use crate::web::api::GhastApiState;
 use crate::web::routes::utils::{get_match_player_stats, get_matches, get_uber_data};
-use crate::web::types::{MatchApi, MatchPlayerApi, PlayerlessMatchApi, UberApi};
+use crate::web::types::{MatchApi, MatchPlayerApi, PaginatedMatchApi, PlayerlessMatchApi, UberApi};
 use ::std::ops::Sub;
 use chrono::{TimeDelta, Utc};
 use rocket::serde::json::Json;
@@ -9,7 +9,7 @@ use rocket::{Build, Rocket, State, get, routes};
 #[get("/all")]
 pub async fn get_all_matches(state: &State<GhastApiState>) -> Json<MatchApi> {
     if let Some(matches) = state.database.get_matches_all().await {
-        return get_matches(state, matches).await;
+        return Json(get_matches(state, matches).await);
     }
 
     Json(Vec::new())
@@ -22,7 +22,7 @@ pub async fn get_recent_matches(state: &State<GhastApiState>) -> Json<MatchApi> 
         .get_matches_between(Utc::now().sub(TimeDelta::days(3)), Utc::now())
         .await
     {
-        return get_matches(state, matches).await;
+        return Json(get_matches(state, matches).await);
     }
 
     Json(Vec::new())
@@ -54,6 +54,28 @@ pub async fn get_player_stats_for_match(
     None
 }
 
+#[get("/paginated?<offset>&<pagesize>")]
+pub async fn get_paginated_matches(
+    state: &State<GhastApiState>,
+    offset: i64,
+    pagesize: i64,
+) -> Json<PaginatedMatchApi> {
+    let Some(matches) = state.database.get_matches_paginated(offset, pagesize).await else {
+        return Json(PaginatedMatchApi {
+            matches: Vec::new(),
+            total_matches: 0,
+        });
+    };
+
+    let matches = get_matches(state, matches).await;
+    let total_matches = state.database.get_match_count().await.unwrap_or(0);
+
+    Json(PaginatedMatchApi {
+        matches,
+        total_matches,
+    })
+}
+
 pub fn mount(rocket_build: Rocket<Build>) -> Rocket<Build> {
     rocket_build.mount(
         "/matches",
@@ -63,6 +85,7 @@ pub fn mount(rocket_build: Rocket<Build>) -> Rocket<Build> {
             get_match_from_id,
             get_player_stats_for_match,
             get_match_uber,
+            get_paginated_matches
         ],
     )
 }

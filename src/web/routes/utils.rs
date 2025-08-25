@@ -4,13 +4,13 @@ use crate::web::types::{
     MatchApi, MatchPlayer, MatchPlayerApi, MatchResponse, PlayerData, UberApi,
 };
 use rocket::State;
-use rocket::serde::json::Json;
+// use rocket::serde::json::Json;
 use std::collections::HashMap;
 
 pub async fn get_matches(
     state: &State<GhastApiState>,
     matches: HashMap<u32, MatchData>,
-) -> Json<MatchApi> {
+) -> MatchApi {
     let mut lock = state.username_resolver.lock().await;
     let mut formed_matches = Vec::with_capacity(matches.len());
     for (id, data) in matches.clone().into_iter() {
@@ -41,7 +41,7 @@ pub async fn get_matches(
         });
     }
 
-    Json(formed_matches)
+    formed_matches
 }
 
 pub async fn get_match_player_stats(

@@ -19,6 +19,8 @@ export type MatchData = {
 
 export type Matches = Match[];
 
+export type PaginatedMatches = { matches: Matches; total_matches: number };
+
 export type Player = {
   username: string;
   uuid: string;

@@ -2,6 +2,7 @@ use crate::db::model::match_data::{MatchData, PlayerlessMatchData};
 use crate::db::model::player_match_stats::PlayerMatchStats;
 use chrono::{DateTime, Utc};
 use log::warn;
+// use moka::future::Cache;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::collections::HashMap;
@@ -10,6 +11,7 @@ use uuid::Uuid;
 
 pub struct Database {
     connection_pool: Pool<Postgres>,
+    // pagination_cache: Cache<(i64, i64, i64), HashMap<u32, MatchData>>,
 }
 
 impl Database {
@@ -21,6 +23,27 @@ impl Database {
             .unwrap();
         Database {
             connection_pool: pool,
+            // pagination_cache: Cache::builder().max_capacity(1_000).build(),
+        }
+    }
+
+    pub async fn get_match_count(&self) -> Option<i64> {
+        let result = sqlx::query!(r#"SELECT COUNT(*) from match_data"#)
+            .fetch_all(&self.connection_pool)
+            .await;
+
+        match result {
+            Ok(mut records) => {
+                if records.is_empty() {
+                    return None;
+                }
+                let record = records.remove(0);
+                Some(record.count.unwrap_or(0))
+            }
+            Err(e) => {
+                warn!("Error retrieving matches {e:?}");
+                None
+            }
         }
     }
 
@@ -107,6 +130,82 @@ impl Database {
                     };
                     match_data.insert(record.r#match as u32, datum);
                 }
+                Some(match_data)
+            }
+            Err(e) => {
+                warn!("Error retrieving matches {e:?}");
+                None
+            }
+        }
+    }
+    pub async fn get_matches_paginated(
+        &self,
+        offset: i64,
+        pagesize: i64,
+    ) -> Option<HashMap<u32, MatchData>> {
+        // let start = tokio::time::Instant::now();
+        // if this ever goes in then obv this fn is gonna return this along with the match data
+        // let match_count = self.get_match_count().await.unwrap_or(0);
+
+        // self.pagination_cache
+        //     .invalidate_entries_if(move |(count, _, _), _| count.to_owned() != match_count)
+        //     .unwrap();
+
+        // if let Some(value) = self
+        //     .pagination_cache
+        //     .get(&(match_count, offset, pagesize))
+        //     .await
+        // {
+        //     println!("{:?}", start.elapsed());
+        //     return Some(value);
+        // }
+        let result = sqlx::query!(
+                r#"
+    SELECT m.match, m.server, m.start_time, m.duration, m.winner, m.team_one_score, m.team_two_score,
+           m.map, m.is_tourney, m.team_one_name, m.team_two_name, m.team_one_color, m.team_two_color,
+           COALESCE(ARRAY_REMOVE(ARRAY_AGG(p.player), NULL), '{}'::bytea[]) players
+    FROM match_data m LEFT JOIN player_match_data p ON p.match = m.match
+    GROUP BY m.match
+    ORDER BY start_time DESC
+    OFFSET $1 LIMIT $2 
+    "#,
+            offset,pagesize
+            )
+            .fetch_all(&self.connection_pool)
+            .await;
+        let mut match_data: HashMap<u32, MatchData> = HashMap::new();
+        match result {
+            Ok(records) => {
+                if records.is_empty() {
+                    return None;
+                }
+                for record in records {
+                    let datum = MatchData {
+                        server: record.server,
+                        start_time: record.start_time as u64,
+                        duration: record.duration as u32,
+                        winner: record.winner,
+                        team_one_score: record.team_one_score as u32,
+                        team_two_score: record.team_two_score as u32,
+                        map: record.map,
+                        is_tourney: record.is_tourney,
+                        team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
+                        team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
+                        team_one_color: record.team_one_color.map(|n| n as u32),
+                        team_two_color: record.team_two_color.map(|n| n as u32),
+                        players: record
+                            .players
+                            .unwrap_or(Vec::new())
+                            .into_iter()
+                            .map(Database::parse_uuid)
+                            .collect(),
+                    };
+                    match_data.insert(record.r#match as u32, datum);
+                }
+                // self.pagination_cache
+                //     .insert((match_count, offset, pagesize), match_data.clone())
+                //     .await;
+                // println!("{:?}", start.elapsed());
                 Some(match_data)
             }
             Err(e) => {

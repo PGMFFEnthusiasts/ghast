@@ -3,13 +3,13 @@ use uuid::Uuid;
 
 use crate::db::model::{match_data::PlayerlessMatchData, player_match_stats::PlayerMatchStats};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PlayerData {
     pub uuid: Uuid,
     pub username: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct MatchResponse {
     pub id: u32,
     pub data: PlayerlessMatchData,
@@ -23,6 +23,12 @@ pub struct PlayerlessMatchApi {
 }
 
 pub type MatchApi = Vec<MatchResponse>;
+
+#[derive(Serialize, Deserialize)]
+pub struct PaginatedMatchApi {
+    pub matches: MatchApi,
+    pub total_matches: i64,
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct MatchPlayer {
