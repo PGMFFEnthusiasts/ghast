@@ -2,7 +2,7 @@ use crate::db::database::Database;
 use crate::external::mojang::MojangApi;
 use crate::util::cached_accessor::LoadingCacheDataAccessor;
 use moka::future::Cache;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::task::JoinSet;
@@ -35,28 +35,25 @@ impl UsernameResolver {
 
     pub async fn resolve_batch(&mut self, uuids: Vec<Uuid>) -> HashMap<Uuid, Option<String>> {
         let mut names: HashMap<Uuid, Option<String>> = HashMap::new();
-        let mut set = JoinSet::new();
-        for uuid in uuids {
+
+        let mut results = {
             let db = self.database.clone();
-            let future = async move { (uuid, db.get_username_from_uuid(uuid).await) };
-            set.spawn(future);
+            db.get_usernames_from_uuids(&uuids).await
+        };
+
+        for uuid in uuids {
+            names.insert(uuid, results.remove(&uuid));
         }
-        let results = set.join_all().await;
-        let mut missing: Vec<Uuid> = Vec::new();
-        for result in results {
-            match result.1 {
-                Some(name) => {
-                    names.insert(result.0, Some(name));
-                }
-                None => missing.push(result.0),
-            }
-        }
-        let api_names = self.loading_cache.get_batch(missing).await;
-        for (key, value) in api_names {
-            if let Some(v) = value {
-                names.insert(key, Some(v.clone()));
-            }
-        }
+
+        // no one wants this
+        // let api_names = self.loading_cache.get_batch(
+        //     Vec::from_iter(missing.iter().cloned())
+        // ).await;
+        // for (key, value) in api_names {
+        //     if let Some(v) = value {
+        //         names.insert(key, Some(v.clone()));
+        //     }
+        // }
         names
     }
 }

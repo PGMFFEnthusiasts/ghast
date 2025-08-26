@@ -6,6 +6,7 @@ use crate::web::types::{
 use rocket::State;
 use rocket::serde::json::Json;
 use std::collections::HashMap;
+use uuid::Uuid;
 
 pub async fn get_matches(
     state: &State<GhastApiState>,
@@ -13,8 +14,26 @@ pub async fn get_matches(
 ) -> Json<MatchApi> {
     let mut lock = state.username_resolver.lock().await;
     let mut formed_matches = Vec::with_capacity(matches.len());
+    let mut all_players : Vec<Uuid> = Vec::new();
+    for (match_id, data) in matches.iter() {
+        all_players.extend(&data.players);
+    }
+    let all_username_map = lock.resolve_batch(all_players).await;
     for (id, data) in matches.clone().into_iter() {
-        let username_map = lock.resolve_batch(data.players).await;
+        let player_data = {
+            let mut player_data_vec: Vec<PlayerData> = Vec::new();
+            for player in data.players {
+                let username =
+                    all_username_map.get(
+                        &player
+                    ).cloned().flatten().unwrap_or(String::from("Unknown"));
+                player_data_vec.push(PlayerData {
+                    uuid: player,
+                    username
+                });
+            }
+            player_data_vec
+        };
         formed_matches.push(MatchResponse {
             id,
             data: PlayerlessMatchData {
@@ -31,13 +50,7 @@ pub async fn get_matches(
                 team_one_color: data.team_one_color,
                 team_two_color: data.team_two_color,
             },
-            players: username_map
-                .iter()
-                .map(|(uuid, username)| PlayerData {
-                    uuid: *uuid,
-                    username: username.clone().unwrap_or(String::from("Unknown")),
-                })
-                .collect(),
+            players: player_data,
         });
     }
 

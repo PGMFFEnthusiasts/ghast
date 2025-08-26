@@ -274,6 +274,28 @@ impl Database {
 
         None
     }
+
+    pub async fn get_usernames_from_uuids(&self, uuids: &Vec<Uuid>) -> HashMap<Uuid, String> {
+        let uuid_bytes: Vec<Vec<u8>> = uuids.iter().map(|u| u.as_bytes().to_vec()).collect();
+        let rows = sqlx::query!(
+            r#"
+            SELECT name, uuid
+            FROM player_identities
+            WHERE uuid = ANY($1)
+            "#,
+            &uuid_bytes
+        )
+        .fetch_all(&self.connection_pool)
+        .await
+        .expect("DB query failed");
+
+        let mut map = HashMap::new();
+        for row in rows {
+            map.insert(Self::parse_uuid(row.uuid), row.name);
+        }
+        map
+    }
+
     fn parse_uuid(v: Vec<u8>) -> Uuid {
         let s = if v.len() == 16 {
             Uuid::from_bytes(Self::vec_as_arr(v))
