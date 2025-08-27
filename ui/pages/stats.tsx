@@ -42,10 +42,17 @@ const getData = async (id: string | undefined): Promise<Uber | undefined> => {
   return (await res.json()) as Uber;
 };
 
-const teamColors = [`text-red-600`, `text-blue-600`];
+const redColor = "text-red-600";
+const blueColor = "text-blue-600";
+const teamColorMap : {
+   [key: string]: string,
+} = {
+  "9": "text-blue-600",
+  "12": "text-red-600"
+}
 
-const nameCellRenderer = (params: { data: PlayerData; value: string }) => {
-  const teamColor = teamColors[params.data.stats.team - 1];
+const nameCellRenderer = (teamOneColor: string, teamTwoColor: string) => (params: { data: PlayerData; value: string }) => {
+  const teamColor = params.data.stats.team - 1 === 0 ? teamOneColor : teamTwoColor;
   return html`
     <span class="${teamColor} flex items-center gap-2 font-medium">
       <img
@@ -58,13 +65,16 @@ const nameCellRenderer = (params: { data: PlayerData; value: string }) => {
   `;
 };
 
-const teamCellRenderer = (params: ICellRendererParams<PlayerData>) => html`
-  <div>
-    <span class="${teamColors[params.data!.stats.team - 1]}">
-      ${params.value}
-    </span>
-  </div>
-`;
+const teamCellRenderer = (teamOneColor: string, teamTwoColor: string) => (params: ICellRendererParams<PlayerData>) =>  {
+  const teamColor = params.data!.stats.team - 1 === 0 ? teamOneColor : teamTwoColor;
+  return html`
+    <div>
+      <span class="${teamColor}">
+        ${params.value}
+      </span>
+    </div>
+  `;
+}
 
 const Stats = (props: { data: Uber }) => {
   const [currentGrid, setCurrentGrid] = createSignal<GridApi<PlayerData>>();
@@ -76,6 +86,9 @@ const Stats = (props: { data: Uber }) => {
     // eslint-disable-next-line solid/reactivity
     props.data.data.team_two_name,
   ];
+  const colorDataPresent = props.data.data.team_one_color != null && props.data.data.team_two_color != null;
+  const teamOneColor = colorDataPresent ? teamColorMap[props.data.data.team_one_color.toString()] : redColor;
+  const teamTwoColor = colorDataPresent ? teamColorMap[props.data.data.team_two_color.toString()] : blueColor;
 
   const theme = useTheme();
 
@@ -94,7 +107,7 @@ const Stats = (props: { data: Uber }) => {
       },
       columnDefs: [
         {
-          cellRenderer: teamCellRenderer,
+          cellRenderer: teamCellRenderer(teamOneColor, teamTwoColor),
           field: `stats.team`,
           filter: true,
           headerName: `Team`,
@@ -102,7 +115,7 @@ const Stats = (props: { data: Uber }) => {
           valueGetter: (p) => teamNames[p.data!.stats.team - 1],
         },
         {
-          cellRenderer: nameCellRenderer,
+          cellRenderer: nameCellRenderer(teamOneColor, teamTwoColor),
           field: `username`,
           headerName: `Player`,
           pinned: `left`,
@@ -206,11 +219,11 @@ const Stats = (props: { data: Uber }) => {
           {props.data.data.server}
         </div>
         <div>
-          <span class={teamColors[0]}>{props.data.data.team_one_name}</span>
+          <span class={teamOneColor}>{props.data.data.team_one_name}</span>
           {` `}
           {props.data.data.team_one_score} - {props.data.data.team_two_score}
           {` `}
-          <span class={teamColors[1]}>{props.data.data.team_two_name}</span>
+          <span class={teamTwoColor}>{props.data.data.team_two_name}</span>
         </div>
       </div>
       <hr />
