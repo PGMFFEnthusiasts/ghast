@@ -48,7 +48,9 @@ const teamColorMap : {
    [key: string]: string,
 } = {
   "9": "text-blue-600",
-  "12": "text-red-600"
+  "12": "text-red-600",
+  "0": "text-black",
+  "6": "text-orange-600"
 }
 
 const nameCellRenderer = (teamOneColor: string, teamTwoColor: string) => (params: { data: PlayerData; value: string }) => {
@@ -87,8 +89,12 @@ const Stats = (props: { data: Uber }) => {
     props.data.data.team_two_name,
   ];
   const colorDataPresent = props.data.data.team_one_color != null && props.data.data.team_two_color != null;
-  const teamOneColor = colorDataPresent ? teamColorMap[props.data.data.team_one_color.toString()] : redColor;
-  const teamTwoColor = colorDataPresent ? teamColorMap[props.data.data.team_two_color.toString()] : blueColor;
+  const teamOneColor = colorDataPresent && props.data.data.team_one_color.toString() in teamColorMap 
+    ? teamColorMap[props.data.data.team_one_color.toString()] 
+    : redColor;
+  const teamTwoColor = colorDataPresent && props.data.data.team_two_color.toString() in teamColorMap 
+    ? teamColorMap[props.data.data.team_two_color.toString()] 
+    : blueColor;
 
   const theme = useTheme();
 
