@@ -13,11 +13,23 @@
     @apply active:bg-ag-active;
   }
 
-  .ag-row.ag-row-last {
-    border-color: var(--ag-border) !important;
+  --ag-value-change-value-highlight-background-color: var(--green-500);
+
+  .ag-sort-order {
+    @apply !ml-2 !py-1 !rounded-sm !bg-button !w-5 !flex !items-center !justify-center !pl-0;
   }
 
-  --ag-value-change-value-highlight-background-color: var(--green-500);
+  .ag-hidden {
+    @apply !hidden;
+  }
+
+  .ag-sort-ascending-icon:not(.ag-hidden) {
+    @apply !flex !items-center !justify-center;
+  }
+
+  .ag-sort-descending-icon:not(.ag-hidden) {
+    @apply !flex !items-center !justify-center;
+  }
 }
 
 @utility ag-grid-issue-9239 {

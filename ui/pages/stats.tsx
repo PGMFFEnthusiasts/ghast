@@ -42,41 +42,45 @@ const getData = async (id: string | undefined): Promise<Uber | undefined> => {
   return (await res.json()) as Uber;
 };
 
-const redColor = "text-red-600";
-const blueColor = "text-blue-600";
-const teamColorMap : {
-   [key: string]: string,
+const redColor = `text-red-600`;
+const blueColor = `text-blue-600`;
+const teamColorMap: {
+  [key: string]: string;
 } = {
-  "9": "text-blue-600",
-  "12": "text-red-600",
-  "0": "text-black",
-  "6": "text-orange-600"
-}
-
-const nameCellRenderer = (teamOneColor: string, teamTwoColor: string) => (params: { data: PlayerData; value: string }) => {
-  const teamColor = params.data.stats.team - 1 === 0 ? teamOneColor : teamTwoColor;
-  return html`
-    <span class="${teamColor} flex items-center gap-2 font-medium">
-      <img
-        alt="${params.data.username}'s Head"
-        title="${params.data.username}'s Head"
-        class="aspect-square size-6"
-        src="${`https://nmsr.nickac.dev/face/${params.data.uuid}?width=64`}"
-      />${params.value}
-    </span>
-  `;
+  '0': `text-black`,
+  '12': `text-red-600`,
+  '6': `text-orange-600`,
+  '9': `text-blue-600`,
 };
 
-const teamCellRenderer = (teamOneColor: string, teamTwoColor: string) => (params: ICellRendererParams<PlayerData>) =>  {
-  const teamColor = params.data!.stats.team - 1 === 0 ? teamOneColor : teamTwoColor;
-  return html`
-    <div>
-      <span class="${teamColor}">
-        ${params.value}
+const nameCellRenderer =
+  (teamOneColor: string, teamTwoColor: string) =>
+  (params: { data: PlayerData; value: string }) => {
+    const teamColor =
+      params.data.stats.team - 1 === 0 ? teamOneColor : teamTwoColor;
+    return html`
+      <span class="${teamColor} flex items-center gap-2 font-medium">
+        <img
+          alt="${params.data.username}'s Head"
+          title="${params.data.username}'s Head"
+          class="aspect-square size-6"
+          src="${`https://nmsr.nickac.dev/face/${params.data.uuid}?width=64`}"
+        />${params.value}
       </span>
-    </div>
-  `;
-}
+    `;
+  };
+
+const teamCellRenderer =
+  (teamOneColor: string, teamTwoColor: string) =>
+  (params: ICellRendererParams<PlayerData>) => {
+    const teamColor =
+      params.data!.stats.team - 1 === 0 ? teamOneColor : teamTwoColor;
+    return html`
+      <div>
+        <span class="${teamColor}"> ${params.value} </span>
+      </div>
+    `;
+  };
 
 const Stats = (props: { data: Uber }) => {
   const [currentGrid, setCurrentGrid] = createSignal<GridApi<PlayerData>>();
@@ -88,12 +92,28 @@ const Stats = (props: { data: Uber }) => {
     // eslint-disable-next-line solid/reactivity
     props.data.data.team_two_name,
   ];
-  const colorDataPresent = props.data.data.team_one_color != null && props.data.data.team_two_color != null;
-  const teamOneColor = colorDataPresent && props.data.data.team_one_color.toString() in teamColorMap 
-    ? teamColorMap[props.data.data.team_one_color.toString()] 
+  const colorDataPresent =
+    // eslint-disable-next-line solid/reactivity
+    props.data.data.team_one_color != undefined &&
+    // eslint-disable-next-line solid/reactivity
+    props.data.data.team_two_color != undefined;
+  const teamOneColor =
+    (
+      colorDataPresent &&
+      // eslint-disable-next-line solid/reactivity
+      props.data.data.team_one_color.toString() in teamColorMap
+    ) ?
+      // eslint-disable-next-line solid/reactivity
+      teamColorMap[props.data.data.team_one_color.toString()]
     : redColor;
-  const teamTwoColor = colorDataPresent && props.data.data.team_two_color.toString() in teamColorMap 
-    ? teamColorMap[props.data.data.team_two_color.toString()] 
+  const teamTwoColor =
+    (
+      colorDataPresent &&
+      // eslint-disable-next-line solid/reactivity
+      props.data.data.team_two_color.toString() in teamColorMap
+    ) ?
+      // eslint-disable-next-line solid/reactivity
+      teamColorMap[props.data.data.team_two_color.toString()]
     : blueColor;
 
   const theme = useTheme();
@@ -126,9 +146,9 @@ const Stats = (props: { data: Uber }) => {
           headerName: `Player`,
           pinned: `left`,
         },
-        { field: `stats.kills`, headerName: `K`, sort: `desc` },
-        { field: `stats.deaths`, headerName: `D` },
-        { field: `stats.assists`, headerName: `A` },
+        { field: `stats.kills`, headerName: `Kills`, sort: `desc` },
+        { field: `stats.deaths`, headerName: `Deaths` },
+        { field: `stats.assists`, headerName: `Assists` },
         { field: `stats.killstreak`, headerName: `Streak` },
         {
           field: `stats.damage_dealt`,
@@ -174,6 +194,9 @@ const Stats = (props: { data: Uber }) => {
         initialWidth: 80,
       },
       domLayout: `autoHeight`,
+      onGridReady: (params) => {
+        params.api.autoSizeAllColumns();
+      },
       rowData: props.data.players,
       suppressDragLeaveHidesColumns: true,
       theme: gridTheme,
@@ -235,7 +258,7 @@ const Stats = (props: { data: Uber }) => {
       <hr />
       <div class='flex-1'>
         <div
-          class='ag-grid'
+          class='!ag-grid'
           data-ag-theme-mode={theme().replace(`dark`, `dark-blue`)}
           ref={theGrid!}
         />

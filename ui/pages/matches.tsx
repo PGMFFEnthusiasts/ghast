@@ -223,7 +223,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
       <hr />
       <div class='flex-1'>
         <div
-          class='!ag-grid-issue-9239 h-full'
+          class='!ag-grid !ag-grid-issue-9239 h-full'
           data-ag-theme-mode={theme().replace(`dark`, `dark-blue`)}
           ref={theGrid!}
         />
