@@ -53,6 +53,18 @@ const teamColorMap: {
   '9': `text-blue-600`,
 };
 
+const colorCorrect = (teamName: string, teamColor: number | undefined, teamOrdinal: number) => {
+  if (teamColor !== undefined) {
+    const resolvedColor = teamColorMap[teamColor.toString()]
+    if (resolvedColor) return resolvedColor
+  }
+
+  if (teamName.toLowerCase() === 'red') return redColor;
+  if (teamName.toLowerCase() === 'blue') return blueColor;
+
+  return teamOrdinal === 0 ? redColor : blueColor;
+}
+
 const nameCellRenderer =
   (teamOneColor: string, teamTwoColor: string) =>
   (params: { data: PlayerData; value: string }) => {
@@ -92,29 +104,8 @@ const Stats = (props: { data: Uber }) => {
     // eslint-disable-next-line solid/reactivity
     props.data.data.team_two_name,
   ];
-  const colorDataPresent =
-    // eslint-disable-next-line solid/reactivity
-    props.data.data.team_one_color != undefined &&
-    // eslint-disable-next-line solid/reactivity
-    props.data.data.team_two_color != undefined;
-  const teamOneColor =
-    (
-      colorDataPresent &&
-      // eslint-disable-next-line solid/reactivity
-      props.data.data.team_one_color.toString() in teamColorMap
-    ) ?
-      // eslint-disable-next-line solid/reactivity
-      teamColorMap[props.data.data.team_one_color.toString()]
-    : redColor;
-  const teamTwoColor =
-    (
-      colorDataPresent &&
-      // eslint-disable-next-line solid/reactivity
-      props.data.data.team_two_color.toString() in teamColorMap
-    ) ?
-      // eslint-disable-next-line solid/reactivity
-      teamColorMap[props.data.data.team_two_color.toString()]
-    : blueColor;
+  const teamOneColor = colorCorrect(props.data.data.team_one_name, props.data.data.team_one_color, 0);
+  const teamTwoColor = colorCorrect(props.data.data.team_two_name, props.data.data.team_two_color, 1);
 
   const theme = useTheme();
 
@@ -137,7 +128,7 @@ const Stats = (props: { data: Uber }) => {
           field: `stats.team`,
           filter: true,
           headerName: `Team`,
-          sort: `desc`,
+          sort: localStorage.getItem("ihatekunet") !== null ? undefined : `desc`,
           valueGetter: (p) => teamNames[p.data!.stats.team - 1],
         },
         {
