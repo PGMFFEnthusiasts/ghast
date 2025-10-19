@@ -53,17 +53,21 @@ const teamColorMap: {
   '9': `text-blue-600`,
 };
 
-const colorCorrect = (teamName: string, teamColor: number | undefined, teamOrdinal: number) => {
+const colorCorrect = (
+  teamName: string,
+  teamColor: number | undefined,
+  teamOrdinal: number,
+) => {
   if (teamColor !== undefined) {
-    const resolvedColor = teamColorMap[teamColor.toString()]
-    if (resolvedColor) return resolvedColor
+    const resolvedColor = teamColorMap[teamColor.toString()];
+    if (resolvedColor) return resolvedColor;
   }
 
-  if (teamName.toLowerCase() === 'red') return redColor;
-  if (teamName.toLowerCase() === 'blue') return blueColor;
+  if (teamName.toLowerCase() === `red`) return redColor;
+  if (teamName.toLowerCase() === `blue`) return blueColor;
 
   return teamOrdinal === 0 ? redColor : blueColor;
-}
+};
 
 const nameCellRenderer =
   (teamOneColor: string, teamTwoColor: string) =>
@@ -104,8 +108,20 @@ const Stats = (props: { data: Uber }) => {
     // eslint-disable-next-line solid/reactivity
     props.data.data.team_two_name,
   ];
-  const teamOneColor = colorCorrect(props.data.data.team_one_name, props.data.data.team_one_color, 0);
-  const teamTwoColor = colorCorrect(props.data.data.team_two_name, props.data.data.team_two_color, 1);
+  const teamOneColor = colorCorrect(
+    // eslint-disable-next-line solid/reactivity
+    props.data.data.team_one_name,
+    // eslint-disable-next-line solid/reactivity
+    props.data.data.team_one_color,
+    0,
+  );
+  const teamTwoColor = colorCorrect(
+    // eslint-disable-next-line solid/reactivity
+    props.data.data.team_two_name,
+    // eslint-disable-next-line solid/reactivity
+    props.data.data.team_two_color,
+    1,
+  );
 
   const theme = useTheme();
 
@@ -128,7 +144,8 @@ const Stats = (props: { data: Uber }) => {
           field: `stats.team`,
           filter: true,
           headerName: `Team`,
-          sort: localStorage.getItem("ihatekunet") !== null ? undefined : `desc`,
+          sort:
+            localStorage.getItem(`ihatekunet`) === null ? `desc` : undefined,
           valueGetter: (p) => teamNames[p.data!.stats.team - 1],
         },
         {

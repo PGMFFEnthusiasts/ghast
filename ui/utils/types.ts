@@ -10,12 +10,12 @@ export type MatchData = {
   map: string;
   server: string;
   start_time: number;
+  team_one_color: number;
   team_one_name: string;
   team_one_score: number;
-  team_one_color: number;
+  team_two_color: number;
   team_two_name: string;
   team_two_score: number;
-  team_two_color: number;
   winner: number;
 };
 

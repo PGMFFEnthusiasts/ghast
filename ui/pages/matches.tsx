@@ -190,7 +190,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
       },
       pagination: true,
       paginationPageSize: 20,
-      rowData: props.matches.sort((a, b) => b.id - a.id),
+      rowData: props.matches.toSorted((a, b) => b.id - a.id),
       suppressDragLeaveHidesColumns: true,
       theme: gridTheme,
     });
