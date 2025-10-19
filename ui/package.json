@@ -27,9 +27,9 @@
     "unified": "^11.0.5"
   },
   "devDependencies": {
-    "@hiddenability/opinionated-defaults": "^0.1.25",
+    "@hiddenability/opinionated-defaults": "^0.1.32",
     "@tailwindcss/typography": "^0.5.16",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.8.1",
     "jiti": "^2.5.1",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
