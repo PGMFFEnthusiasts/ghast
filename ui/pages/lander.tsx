@@ -37,6 +37,9 @@ const LanderPage = () => (
     <A class={buttonStyles(`bg-button`)} href='/matches'>
       View Recent Matches ↗
     </A>
+    <A class={buttonStyles(`bg-button`)} href='/tournaments'>
+      View Tournaments ↗
+    </A>
     <hr />
     <section class='brady-prose'>
       <h2>DISCLAIMER:</h2>

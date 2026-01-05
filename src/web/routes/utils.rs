@@ -15,7 +15,7 @@ pub async fn get_matches(
     let mut lock = state.username_resolver.lock().await;
     let mut formed_matches = Vec::with_capacity(matches.len());
     let mut all_players : HashSet<Uuid> = HashSet::new();
-    for (match_id, data) in matches.iter() {
+    for (_match_id, data) in matches.iter() {
         all_players.extend(&data.players);
     }
     let all_username_map = lock.resolve_batch(

@@ -1,3 +1,3 @@
 pub mod api;
 mod routes;
-mod types;
+pub mod types;

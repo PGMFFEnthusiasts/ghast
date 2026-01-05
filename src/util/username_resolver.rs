@@ -2,13 +2,13 @@ use crate::db::database::Database;
 use crate::external::mojang::MojangApi;
 use crate::util::cached_accessor::LoadingCacheDataAccessor;
 use moka::future::Cache;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::task::JoinSet;
 use uuid::Uuid;
 
 pub struct UsernameResolver {
+    #[allow(dead_code)]
     loading_cache: LoadingCacheDataAccessor<Uuid, String>,
     database: Arc<Database>,
 }

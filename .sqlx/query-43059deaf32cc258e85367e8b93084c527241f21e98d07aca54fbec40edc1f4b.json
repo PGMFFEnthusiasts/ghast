@@ -1,0 +1,142 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT match, player, team, kills, deaths, assists, killstreak, dmg_dealt, dmg_taken,\n                   pickups, throws, passes, catches, strips, touchdowns, touchdown_passes,\n                   passing_blocks, receive_blocks, defensive_interceptions, pass_interceptions,\n                   damage_carrier\n            FROM player_match_data\n            WHERE match = ANY($1)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "match",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "player",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 2,
+        "name": "team",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "kills",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "deaths",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "assists",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "killstreak",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "dmg_dealt",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 8,
+        "name": "dmg_taken",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 9,
+        "name": "pickups",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "throws",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "passes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "catches",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "strips",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "touchdowns",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "touchdown_passes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "passing_blocks",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 17,
+        "name": "receive_blocks",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 18,
+        "name": "defensive_interceptions",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 19,
+        "name": "pass_interceptions",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 20,
+        "name": "damage_carrier",
+        "type_info": "Float8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "43059deaf32cc258e85367e8b93084c527241f21e98d07aca54fbec40edc1f4b"
+}

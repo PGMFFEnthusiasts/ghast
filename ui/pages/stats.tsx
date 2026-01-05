@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { A, useParams } from '@solidjs/router';
+import { useParams } from '@solidjs/router';
 import {
   type CellKeyDownEvent,
   ClientSideRowModelModule,
@@ -23,6 +23,7 @@ import {
 import { toast } from 'solid-sonner';
 
 import { Button } from '@/components/button';
+import { Layout } from '@/components/layouts/the-layout';
 import { Csv } from '@/icons';
 import {
   formatNumericalDuration,
@@ -31,7 +32,6 @@ import {
 } from '@/utils';
 import { gridTheme } from '@/utils/grid';
 import { type PlayerData, type Uber } from '@/utils/types';
-import { useTheme } from '@/utils/use-theme';
 
 const getData = async (id: string | undefined): Promise<Uber | undefined> => {
   if (!id) return undefined;
@@ -102,28 +102,22 @@ const Stats = (props: { data: Uber }) => {
   const [currentGrid, setCurrentGrid] = createSignal<GridApi<PlayerData>>();
   let theGrid: HTMLDivElement;
 
-  const teamNames = [
-    // eslint-disable-next-line solid/reactivity
+  const teamNames = () => [
     props.data.data.team_one_name,
-    // eslint-disable-next-line solid/reactivity
     props.data.data.team_two_name,
   ];
-  const teamOneColor = colorCorrect(
-    // eslint-disable-next-line solid/reactivity
-    props.data.data.team_one_name,
-    // eslint-disable-next-line solid/reactivity
-    props.data.data.team_one_color,
-    0,
-  );
-  const teamTwoColor = colorCorrect(
-    // eslint-disable-next-line solid/reactivity
-    props.data.data.team_two_name,
-    // eslint-disable-next-line solid/reactivity
-    props.data.data.team_two_color,
-    1,
-  );
-
-  const theme = useTheme();
+  const teamOneColor = () =>
+    colorCorrect(
+      props.data.data.team_one_name,
+      props.data.data.team_one_color,
+      0,
+    );
+  const teamTwoColor = () =>
+    colorCorrect(
+      props.data.data.team_two_name,
+      props.data.data.team_two_color,
+      1,
+    );
 
   onMount(() => {
     ModuleRegistry.registerModules([
@@ -140,16 +134,16 @@ const Stats = (props: { data: Uber }) => {
       },
       columnDefs: [
         {
-          cellRenderer: teamCellRenderer(teamOneColor, teamTwoColor),
+          cellRenderer: teamCellRenderer(teamOneColor(), teamTwoColor()),
           field: `stats.team`,
           filter: true,
           headerName: `Team`,
           sort:
             localStorage.getItem(`ihatekunet`) === null ? `desc` : undefined,
-          valueGetter: (p) => teamNames[p.data!.stats.team - 1],
+          valueGetter: (p) => teamNames()[p.data!.stats.team - 1],
         },
         {
-          cellRenderer: nameCellRenderer(teamOneColor, teamTwoColor),
+          cellRenderer: nameCellRenderer(teamOneColor(), teamTwoColor()),
           field: `username`,
           headerName: `Player`,
           pinned: `left`,
@@ -237,39 +231,35 @@ const Stats = (props: { data: Uber }) => {
   });
 
   return (
-    <div class='container mx-auto flex min-h-screen flex-col space-y-4 p-2 xl:p-4'>
-      <div>
-        <A
-          class='text-primary/70 transition-colors duration-200 hover:text-primary'
-          href='/matches'
-        >
-          ← Recent Matches
-        </A>
-        <h1 class='text-2xl font-bold'>
+    <Layout
+      description={
+        <>
+          <div>Started {formatReallyLongTime(props.data.data.start_time)}</div>
+          <div>
+            {formatNumericalDuration(props.data.data.duration)} - played on{` `}
+            {props.data.data.server}
+          </div>
+          <div>
+            <span class={teamOneColor()}>{props.data.data.team_one_name}</span>
+            {` `}
+            {props.data.data.team_one_score} - {props.data.data.team_two_score}
+            {` `}
+            <span class={teamTwoColor()}>{props.data.data.team_two_name}</span>
+          </div>
+        </>
+      }
+      fillViewport
+      title={
+        <>
           <span class='tracking-wide uppercase'>{props.data.data.map}</span>
           {` `}
           <span class='font-medium text-tertiary'>#{props.data.id}</span>
-        </h1>
-        <div>Started {formatReallyLongTime(props.data.data.start_time)}</div>
-        <div>
-          {formatNumericalDuration(props.data.data.duration)} - played on{` `}
-          {props.data.data.server}
-        </div>
-        <div>
-          <span class={teamOneColor}>{props.data.data.team_one_name}</span>
-          {` `}
-          {props.data.data.team_one_score} - {props.data.data.team_two_score}
-          {` `}
-          <span class={teamTwoColor}>{props.data.data.team_two_name}</span>
-        </div>
-      </div>
+        </>
+      }
+    >
       <hr />
       <div class='flex-1'>
-        <div
-          class='!ag-grid'
-          data-ag-theme-mode={theme().replace(`dark`, `dark-blue`)}
-          ref={theGrid!}
-        />
+        <div class='ag-grid!' data-ag-theme-mode='dark-blue' ref={theGrid!} />
       </div>
 
       <hr />
@@ -285,7 +275,7 @@ const Stats = (props: { data: Uber }) => {
       >
         <Csv />
       </Button>
-    </div>
+    </Layout>
   );
 };
 

@@ -1,7 +1,6 @@
 import type { JSX } from 'solid-js';
 
-// Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE
-export const Braces = (props: JSX.IntrinsicElements[`svg`]) => (
+export const Swords = (props: JSX.IntrinsicElements[`svg`]) => (
   <svg
     height='1em'
     viewBox='0 0 24 24'
@@ -10,7 +9,7 @@ export const Braces = (props: JSX.IntrinsicElements[`svg`]) => (
     {...props}
   >
     <path
-      d='M7 4a2 2 0 0 0-2 2v3a2 3 0 0 1-2 3a2 3 0 0 1 2 3v3a2 2 0 0 0 2 2M17 4a2 2 0 0 1 2 2v3a2 3 0 0 0 2 3a2 3 0 0 0-2 3v3a2 2 0 0 1-2 2'
+      d='M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6m-3 3l4 4m-1 1l2-2M14.5 6.5L18 3h3v3l-3.5 3.5M5 14l4 4m-2-1l-3 3m-1-1l2 2'
       fill='none'
       stroke='currentColor'
       stroke-linecap='round'

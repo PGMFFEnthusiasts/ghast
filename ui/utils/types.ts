@@ -21,6 +21,14 @@ export type MatchData = {
 
 export type Matches = Match[];
 
+export type MVPCategory =
+  | `defensive`
+  | `mvp`
+  | `offensive`
+  | `passer`
+  | `pvp`
+  | `receiver`;
+
 export type Player = {
   username: string;
   uuid: string;
@@ -52,6 +60,49 @@ export type Stats = {
   throws: number;
   touchdown_passes: number;
   touchdowns: number;
+};
+
+export type TournamentData = {
+  captains: Player[];
+  date: number;
+  matchCount: number;
+  name: string;
+  playerCount: number;
+  winnerTeamId: number;
+};
+
+export type TournamentDetailedData = {
+  allTournament: Player[] & { length: 5 };
+  date: number;
+  matches: TournamentMatchData[];
+  mvp: {
+    dpot: Player;
+    mvp: Player;
+    oldl: Player;
+    opot: Player;
+    passer: Player;
+    receiver: Player;
+  };
+  name: string;
+  teams: TournamentTeam[];
+  winnerTeamId: number;
+};
+
+export type TournamentMatchData = {
+  duration: number;
+  matchId: number;
+  server: string;
+  startTime: number;
+  teamOneId: number;
+  teamOneScore: number;
+  teamTwoId: number;
+  teamTwoScore: number;
+};
+
+export type TournamentTeam = {
+  captain: Player;
+  id: number;
+  players: PlayerData[];
 };
 
 export type Uber = Match & {

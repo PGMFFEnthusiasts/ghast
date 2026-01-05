@@ -1,4 +1,3 @@
-import { A } from '@solidjs/router';
 import {
   ClientSideRowModelModule,
   ColumnAutoSizeModule,
@@ -16,6 +15,7 @@ import { createResource, onMount, Show, Suspense } from 'solid-js';
 
 import type { Match, Matches, Player } from '@/utils/types';
 
+import { Layout } from '@/components/layouts/the-layout';
 import {
   capitalize,
   formatNumericalDuration,
@@ -23,7 +23,6 @@ import {
   divHtml as html,
 } from '@/utils';
 import { gridTheme } from '@/utils/grid';
-import { useTheme } from '@/utils/use-theme';
 
 const getData = async (): Promise<Matches> => {
   const apiRoot =
@@ -97,8 +96,6 @@ const playerFilter = (params: {
 
 const MatchesGrid = (props: { matches: Matches }) => {
   let theGrid: HTMLDivElement;
-
-  const theme = useTheme();
 
   onMount(() => {
     ModuleRegistry.registerModules([
@@ -201,34 +198,20 @@ const MatchesGrid = (props: { matches: Matches }) => {
   });
 
   return (
-    <div class='container mx-auto flex h-screen flex-col space-y-4 p-4 xl:p-8'>
-      <div class='flex flex-col'>
-        <A
-          class='group text-primary/60 transition-colors duration-200 hover:text-primary'
-          href='/'
-        >
-          ← The{` `}
-          <span class='rounded bg-red-500/35 px-2 py-1 font-black transition-colors duration-200 group-hover:bg-red-500/50'>
-            OFFICIAL
-          </span>
-          {` `}
-          TB "Work In Progress" Homepage
-        </A>
-        <div class='mt-2 text-2xl font-bold'>Recent Matches</div>
-        <div class='text-secondary'>
-          Yep, that's literally all of the recent matches. You can still view
-          previous matches by their links, of course.
-        </div>
-      </div>
+    <Layout
+      description="Yep, that's literally all of the recent matches. You can still view previous matches by their links, of course."
+      fillViewport
+      title='Recent Matches'
+    >
       <hr />
-      <div class='flex-1'>
+      <div class='min-h-96 flex-1'>
         <div
-          class='!ag-grid !ag-grid-issue-9239 h-full'
-          data-ag-theme-mode={theme().replace(`dark`, `dark-blue`)}
+          class='ag-grid! ag-grid-issue-9239! h-full'
+          data-ag-theme-mode='dark-blue'
           ref={theGrid!}
         />
       </div>
-    </div>
+    </Layout>
   );
 };
 

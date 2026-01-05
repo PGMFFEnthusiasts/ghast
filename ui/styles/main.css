@@ -1,8 +1,39 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
-@import './light.css';
 @import './dark.css';
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('/Rubik-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Maple Mono';
+  src: url('/MapleMono[wght].ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Maple Mono';
+  src: url('/MapleMono-Italic[wght].ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
 
 @utility optimize-legibility {
   text-rendering: optimizeLegibility;
@@ -50,6 +81,9 @@
 }
 
 @theme inline {
+  --font-rubik: 'Rubik', sans-serif;
+  --font-maple-mono: 'Maple Mono', monospace;
+
   --color-border: var(--gray-a6);
   --color-border-hover: var(--gray-a7);
   --color-border-active: var(--gray-a8);
@@ -67,19 +101,12 @@
 }
 
 :root {
-  --ag-active: oklch(0.92 0.0134 240.95);
-  --ag-border: oklch(0 0 0 / 14.9%);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ag-active: oklch(0.29 0.0548 248.87);
-    --ag-border: oklch(1 0 0 / 14.9%);
-  }
+  --ag-active: oklch(0.29 0.0548 248.87);
+  --ag-border: oklch(1 0 0 / 14.9%);
 }
 
 @utility brady-prose {
-  @apply prose dark:prose-invert prose-headings:my-2 prose-headings:font-black prose-p:my-2 prose-a:text-blue-500 prose-a:decoration-dotted prose-code:before:content-[""] prose-code:after:content-[""] prose-ul:my-0.5 prose-li:my-0.5;
+  @apply prose prose-invert prose-headings:my-2 prose-headings:font-black prose-p:my-2 prose-a:text-blue-500 prose-a:decoration-dotted prose-code:before:content-[""] prose-code:after:content-[""] prose-ul:my-0.5 prose-li:my-0.5;
 }
 
 @layer base {
@@ -98,7 +125,7 @@
 
   h1,
   h2 {
-    @apply dark:text-white;
+    @apply text-white;
   }
 
   a {

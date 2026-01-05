@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                tm.tournament_id,\n                tm.match_id,\n                tm.team_one_tournament_id,\n                tm.team_two_tournament_id,\n                m.duration,\n                m.server,\n                m.start_time,\n                m.team_one_score,\n                m.team_two_score\n            FROM tournament_match tm\n            JOIN match_data m ON m.match = tm.match_id\n            WHERE tm.tournament_id = $1\n            ORDER BY m.start_time\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tournament_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "match_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "team_one_tournament_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "team_two_tournament_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "duration",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "server",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "start_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "team_one_score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "team_two_score",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e3fd2127561f15d0fce8646c8b30c76b4f65c080daf604b617778bad83f98b0e"
+}
