@@ -58,7 +58,7 @@ const colorCorrect = (
   teamColor: number | undefined,
   teamOrdinal: number,
 ) => {
-  if (teamColor !== undefined) {
+  if (typeof teamColor === `number`) {
     const resolvedColor = teamColorMap[teamColor.toString()];
     if (resolvedColor) return resolvedColor;
   }
