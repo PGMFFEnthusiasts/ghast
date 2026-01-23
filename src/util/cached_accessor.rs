@@ -9,6 +9,7 @@ use tokio::task::JoinSet;
 //     async fn get(&mut self, key: K) -> V;
 // }
 
+#[allow(dead_code, clippy::type_complexity)]
 pub struct LoadingCacheDataAccessor<K, V> {
     pub loader: Arc<dyn Fn(K) -> Pin<Box<dyn Future<Output = Option<V>> + Send>> + Send + Sync>,
     pub cache: Cache<K, V>,
@@ -16,6 +17,7 @@ pub struct LoadingCacheDataAccessor<K, V> {
 impl<K: Hash + Eq + Send + Sync + 'static + Clone, V: Clone + Send + Sync + 'static>
     LoadingCacheDataAccessor<K, V>
 {
+    #[allow(dead_code)]
     pub async fn get_batch(&mut self, keys: Vec<K>) -> HashMap<K, Option<V>> {
         let mut set = JoinSet::new();
 

@@ -1,73 +1,71 @@
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #030712;
+:root {
+  --background: #030712;
 
-    --gray-1: #04070e;
-    --gray-2: #121820;
-    --gray-3: #1a222e;
-    --gray-4: #1f2a3a;
-    --gray-5: #243143;
-    --gray-6: #2a3a51;
-    --gray-7: #364862;
-    --gray-8: #4e617d;
-    --gray-9: #5c6f8b;
-    --gray-10: #697c99;
-    --gray-11: #a1b5d2;
-    --gray-12: #e9eff7;
+  --gray-1: #04070e;
+  --gray-2: #121820;
+  --gray-3: #1a222e;
+  --gray-4: #1f2a3a;
+  --gray-5: #243143;
+  --gray-6: #2a3a51;
+  --gray-7: #364862;
+  --gray-8: #4e617d;
+  --gray-9: #5c6f8b;
+  --gray-10: #697c99;
+  --gray-11: #a1b5d2;
+  --gray-12: #e9eff7;
 
-    --gray-a1: #83070002;
-    --gray-a2: #d8f7d912;
-    --gray-a3: #c1e6f91f;
-    --gray-a4: #a6d2fa2c;
-    --gray-a5: #a2d1fe35;
-    --gray-a6: #96c7ff44;
-    --gray-a7: #99c5fd57;
-    --gray-a8: #a8cdfd74;
-    --gray-a9: #b1d2fe83;
-    --gray-a10: #b6d4fe92;
-    --gray-a11: #c5deffcf;
-    --gray-a12: #f1f7fef7;
+  --gray-a1: #83070002;
+  --gray-a2: #d8f7d912;
+  --gray-a3: #c1e6f91f;
+  --gray-a4: #a6d2fa2c;
+  --gray-a5: #a2d1fe35;
+  --gray-a6: #96c7ff44;
+  --gray-a7: #99c5fd57;
+  --gray-a8: #a8cdfd74;
+  --gray-a9: #b1d2fe83;
+  --gray-a10: #b6d4fe92;
+  --gray-a11: #c5deffcf;
+  --gray-a12: #f1f7fef7;
 
-    --gray-contrast: #fff;
-    --gray-surface: rgba(0, 0, 0, 0.05);
-    --gray-indicator: #5c6f8b;
-    --gray-track: #5c6f8b;
+  --gray-contrast: #fff;
+  --gray-surface: rgba(0, 0, 0, 0.05);
+  --gray-indicator: #5c6f8b;
+  --gray-track: #5c6f8b;
 
-    --accent-1: #030712;
-    --accent-2: #101724;
-    --accent-3: #172134;
-    --accent-4: #1e293d;
-    --accent-5: #253045;
-    --accent-6: #2d394f;
-    --accent-7: #3b475d;
-    --accent-8: #546178;
-    --accent-9: #616e86;
-    --accent-10: #546178;
-    --accent-11: #a5b4ce;
-    --accent-12: #e7eefc;
+  --accent-1: #030712;
+  --accent-2: #101724;
+  --accent-3: #172134;
+  --accent-4: #1e293d;
+  --accent-5: #253045;
+  --accent-6: #2d394f;
+  --accent-7: #3b475d;
+  --accent-8: #546178;
+  --accent-9: #616e86;
+  --accent-10: #546178;
+  --accent-11: #a5b4ce;
+  --accent-12: #e7eefc;
 
-    --accent-a1: #00000000;
-    --accent-a2: #a9d3f814;
-    --accent-a3: #8dbbfd25;
-    --accent-a4: #96c0fc2f;
-    --accent-a5: #a1c6ff37;
-    --accent-a6: #a6c9fe42;
-    --accent-a7: #b4d1ff51;
-    --accent-a8: #bfd8ff6e;
-    --accent-a9: #c2d9ff7d;
-    --accent-a10: #bfd8ff6e;
-    --accent-a11: #cee1fecb;
-    --accent-a12: #eaf1fffc;
+  --accent-a1: #00000000;
+  --accent-a2: #a9d3f814;
+  --accent-a3: #8dbbfd25;
+  --accent-a4: #96c0fc2f;
+  --accent-a5: #a1c6ff37;
+  --accent-a6: #a6c9fe42;
+  --accent-a7: #b4d1ff51;
+  --accent-a8: #bfd8ff6e;
+  --accent-a9: #c2d9ff7d;
+  --accent-a10: #bfd8ff6e;
+  --accent-a11: #cee1fecb;
+  --accent-a12: #eaf1fffc;
 
-    --accent-contrast: #fff;
-    --accent-surface: #1d273680;
-    --accent-indicator: #616e86;
-    --accent-track: #616e86;
-  }
+  --accent-contrast: #fff;
+  --accent-surface: #1d273680;
+  --accent-indicator: #616e86;
+  --accent-track: #616e86;
 }
 
 @supports (color: color(display-p3 1 1 1)) {
-  @media (color-gamut: p3) and (prefers-color-scheme: dark) {
+  @media (color-gamut: p3) {
     :root {
       --gray-1: oklch(13% 0.0181 257.7);
       --gray-2: oklch(20.5% 0.0186 257.7);

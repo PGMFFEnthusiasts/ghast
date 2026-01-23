@@ -41,5 +41,6 @@ pub fn rocket(state: GhastApiState) -> Rocket<Build> {
     let cors = get_cors_configuration().to_cors().unwrap();
     let mut build = rocket::custom(config).attach(cors).manage(state);
     build = routes::r#match::mount(build);
+    build = routes::tournament::mount(build);
     build
 }

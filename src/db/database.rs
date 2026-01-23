@@ -1,5 +1,9 @@
 use crate::db::model::match_data::{MatchData, PlayerlessMatchData};
 use crate::db::model::player_match_stats::PlayerMatchStats;
+use crate::db::model::tournament::{
+    TournamentBase, TournamentMatchMapping, TournamentTeam, TournamentTeamPlayer,
+    TournamentWithCounts,
+};
 use chrono::{DateTime, Utc};
 use log::warn;
 use sqlx::postgres::PgPoolOptions;
@@ -241,6 +245,7 @@ impl Database {
         Some(player_stats)
     }
 
+    #[allow(dead_code)]
     pub async fn get_username_from_uuid(&self, uuid: Uuid) -> Option<String> {
         let uuid_bytes = uuid.as_bytes().to_vec();
 
@@ -275,7 +280,7 @@ impl Database {
         None
     }
 
-    pub async fn get_usernames_from_uuids(&self, uuids: &Vec<Uuid>) -> HashMap<Uuid, String> {
+    pub async fn get_usernames_from_uuids(&self, uuids: &[Uuid]) -> HashMap<Uuid, String> {
         let uuid_bytes: Vec<Vec<u8>> = uuids.iter().map(|u| u.as_bytes().to_vec()).collect();
         let rows = sqlx::query!(
             r#"
@@ -311,5 +316,262 @@ impl Database {
         v.try_into().unwrap_or_else(|v: Vec<T>| {
             panic!("Expected a Vec of length {} but it was {}", N, v.len())
         })
+    }
+
+    pub async fn get_tournaments_all(&self) -> Option<Vec<TournamentWithCounts>> {
+        let result = sqlx::query!(
+            r#"
+            SELECT
+                t.id,
+                t.name,
+                t.date,
+                t.winner_team_id,
+                COUNT(DISTINCT tm.match_id) as match_count,
+                COUNT(DISTINCT ttp.player_uuid) as player_count,
+                (SELECT COALESCE(ARRAY_AGG(captain_uuid ORDER BY team_id), '{}'::bytea[])
+                 FROM tournament_team WHERE tournament_id = t.id) as captain_uuids
+            FROM tournament t
+            LEFT JOIN tournament_match tm ON tm.tournament_id = t.id
+            LEFT JOIN tournament_team_player ttp ON ttp.tournament_id = t.id
+            GROUP BY t.id
+            ORDER BY t.date DESC
+            "#
+        )
+        .fetch_all(&self.connection_pool)
+        .await;
+
+        match result {
+            Ok(records) => {
+                let tournaments: Vec<TournamentWithCounts> = records
+                    .into_iter()
+                    .map(|record| TournamentWithCounts {
+                        id: record.id as u32,
+                        name: record.name,
+                        date: record.date as u64,
+                        winner_team_id: record.winner_team_id,
+                        match_count: record.match_count.unwrap_or(0) as u32,
+                        player_count: record.player_count.unwrap_or(0) as u32,
+                        captain_uuids: record
+                            .captain_uuids
+                            .unwrap_or_default()
+                            .into_iter()
+                            .map(Self::parse_uuid)
+                            .collect(),
+                    })
+                    .collect();
+                Some(tournaments)
+            }
+            Err(e) => {
+                warn!("Error retrieving tournaments {e:?}");
+                None
+            }
+        }
+    }
+
+    pub async fn get_tournament_by_id(&self, id: u32) -> Option<TournamentBase> {
+        let result = sqlx::query!(
+            r#"
+            SELECT id, name, date, winner_team_id
+            FROM tournament
+            WHERE id = $1
+            "#,
+            id as i32
+        )
+        .fetch_optional(&self.connection_pool)
+        .await;
+
+        match result {
+            Ok(Some(record)) => Some(TournamentBase {
+                id: record.id as u32,
+                name: record.name,
+                date: record.date as u64,
+                winner_team_id: record.winner_team_id,
+            }),
+            Ok(None) => None,
+            Err(e) => {
+                warn!("Error retrieving tournament {id}: {e:?}");
+                None
+            }
+        }
+    }
+
+    pub async fn get_tournament_teams(&self, tournament_id: u32) -> Option<Vec<TournamentTeam>> {
+        let result = sqlx::query!(
+            r#"
+            SELECT tournament_id, team_id, captain_uuid
+            FROM tournament_team
+            WHERE tournament_id = $1
+            ORDER BY team_id
+            "#,
+            tournament_id as i32
+        )
+        .fetch_all(&self.connection_pool)
+        .await;
+
+        match result {
+            Ok(records) => {
+                let teams: Vec<TournamentTeam> = records
+                    .into_iter()
+                    .map(|record| TournamentTeam {
+                        tournament_id: record.tournament_id as u32,
+                        team_id: record.team_id,
+                        captain_uuid: Self::parse_uuid(record.captain_uuid),
+                    })
+                    .collect();
+                Some(teams)
+            }
+            Err(e) => {
+                warn!("Error retrieving tournament teams: {e:?}");
+                None
+            }
+        }
+    }
+
+    pub async fn get_tournament_team_players(
+        &self,
+        tournament_id: u32,
+    ) -> Option<Vec<TournamentTeamPlayer>> {
+        let result = sqlx::query!(
+            r#"
+            SELECT tournament_id, team_id, player_uuid
+            FROM tournament_team_player
+            WHERE tournament_id = $1
+            ORDER BY team_id
+            "#,
+            tournament_id as i32
+        )
+        .fetch_all(&self.connection_pool)
+        .await;
+
+        match result {
+            Ok(records) => {
+                let players: Vec<TournamentTeamPlayer> = records
+                    .into_iter()
+                    .map(|record| TournamentTeamPlayer {
+                        tournament_id: record.tournament_id as u32,
+                        team_id: record.team_id,
+                        player_uuid: Self::parse_uuid(record.player_uuid),
+                    })
+                    .collect();
+                Some(players)
+            }
+            Err(e) => {
+                warn!("Error retrieving tournament team players: {e:?}");
+                None
+            }
+        }
+    }
+
+    pub async fn get_tournament_matches(
+        &self,
+        tournament_id: u32,
+    ) -> Option<Vec<TournamentMatchMapping>> {
+        let result = sqlx::query!(
+            r#"
+            SELECT
+                tm.tournament_id,
+                tm.match_id,
+                tm.team_one_tournament_id,
+                tm.team_two_tournament_id,
+                m.duration,
+                m.server,
+                m.start_time,
+                m.team_one_score,
+                m.team_two_score
+            FROM tournament_match tm
+            JOIN match_data m ON m.match = tm.match_id
+            WHERE tm.tournament_id = $1
+            ORDER BY m.start_time
+            "#,
+            tournament_id as i32
+        )
+        .fetch_all(&self.connection_pool)
+        .await;
+
+        match result {
+            Ok(records) => {
+                let matches: Vec<TournamentMatchMapping> = records
+                    .into_iter()
+                    .map(|record| TournamentMatchMapping {
+                        tournament_id: record.tournament_id as u32,
+                        match_id: record.match_id as u32,
+                        team_one_tournament_id: record.team_one_tournament_id,
+                        team_two_tournament_id: record.team_two_tournament_id,
+                        duration: record.duration as u32,
+                        server: record.server,
+                        start_time: record.start_time as u64,
+                        team_one_score: record.team_one_score as u32,
+                        team_two_score: record.team_two_score as u32,
+                    })
+                    .collect();
+                Some(matches)
+            }
+            Err(e) => {
+                warn!("Error retrieving tournament matches: {e:?}");
+                None
+            }
+        }
+    }
+
+    pub async fn get_player_stats_for_matches(
+        &self,
+        match_ids: &[u32],
+    ) -> Option<HashMap<u32, HashMap<Uuid, PlayerMatchStats>>> {
+        let match_ids_i32: Vec<i32> = match_ids.iter().map(|&id| id as i32).collect();
+        let result = sqlx::query!(
+            r#"
+            SELECT match, player, team, kills, deaths, assists, killstreak, dmg_dealt, dmg_taken,
+                   pickups, throws, passes, catches, strips, touchdowns, touchdown_passes,
+                   passing_blocks, receive_blocks, defensive_interceptions, pass_interceptions,
+                   damage_carrier
+            FROM player_match_data
+            WHERE match = ANY($1)
+            "#,
+            &match_ids_i32
+        )
+        .fetch_all(&self.connection_pool)
+        .await;
+
+        match result {
+            Ok(rows) => {
+                let mut stats_by_match: HashMap<u32, HashMap<Uuid, PlayerMatchStats>> =
+                    HashMap::new();
+                for record in rows {
+                    let match_id = record.r#match as u32;
+                    let uuid = Self::parse_uuid(record.player);
+                    let stats = PlayerMatchStats {
+                        team: record.team,
+                        kills: record.kills as u32,
+                        deaths: record.deaths as u32,
+                        assists: record.assists as u32,
+                        killstreak: record.killstreak as u32,
+                        damage_dealt: record.dmg_dealt,
+                        damage_taken: record.dmg_taken,
+                        pickups: record.pickups as u32,
+                        throws: record.throws as u32,
+                        passes: record.passes as u32,
+                        catches: record.catches as u32,
+                        strips: record.strips as u32,
+                        touchdowns: record.touchdowns as u32,
+                        touchdown_passes: record.touchdown_passes as u32,
+                        passing_blocks: record.passing_blocks.unwrap_or(0.0) as f32,
+                        receive_blocks: record.receive_blocks.unwrap_or(0.0) as f32,
+                        defensive_interceptions: record.defensive_interceptions.unwrap_or(0.0)
+                            as u32,
+                        pass_interceptions: record.pass_interceptions.unwrap_or(0.0) as u32,
+                        damage_carrier: record.damage_carrier.unwrap_or(0.0) as f32,
+                    };
+                    stats_by_match
+                        .entry(match_id)
+                        .or_default()
+                        .insert(uuid, stats);
+                }
+                Some(stats_by_match)
+            }
+            Err(e) => {
+                warn!("Error retrieving player stats for matches: {e:?}");
+                None
+            }
+        }
     }
 }

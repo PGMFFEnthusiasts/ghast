@@ -53,6 +53,8 @@
             [
               pkgs.bacon
               pkgs.postgresql_18
+              pkgs.pkg-config
+              pkgs.openssl
               (f.latest.withComponents [
                 "cargo"
                 "clippy"

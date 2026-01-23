@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                t.id,\n                t.name,\n                t.date,\n                t.winner_team_id,\n                COUNT(DISTINCT tm.match_id) as match_count,\n                COUNT(DISTINCT ttp.player_uuid) as player_count,\n                (SELECT COALESCE(ARRAY_AGG(captain_uuid ORDER BY team_id), '{}'::bytea[])\n                 FROM tournament_team WHERE tournament_id = t.id) as captain_uuids\n            FROM tournament t\n            LEFT JOIN tournament_match tm ON tm.tournament_id = t.id\n            LEFT JOIN tournament_team_player ttp ON ttp.tournament_id = t.id\n            GROUP BY t.id\n            ORDER BY t.date DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "date",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "winner_team_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "match_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "player_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "captain_uuids",
+        "type_info": "ByteaArray"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "3c7d27f479512b632c9268e2bdd316e9599e77cca0e286b4700af98cb931c668"
+}

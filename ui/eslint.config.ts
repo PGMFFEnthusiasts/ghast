@@ -18,6 +18,6 @@ export default eslintConfig([
   ...eslintConfigBase,
   ...eslintConfigPerfectionist,
   ...eslintConfigPrettier,
-  ...eslintConfigSolid,
   ...eslintConfigRelative,
+  ...eslintConfigSolid,
 ]);
