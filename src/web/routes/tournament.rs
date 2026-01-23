@@ -74,34 +74,62 @@ fn add_stats(
     }
 }
 
-struct FantasyScores {
+struct WeightedScores {
     passing: f64,
     receiving: f64,
     defense: f64,
     pvp: f64,
 }
 
-impl FantasyScores {
-    fn from_aggregate(agg: &TournamentAggregateStats, games: u32) -> Self {
-        let inv_games = 1.0 / games.max(1) as f64;
+impl WeightedScores {
+    fn from_aggregate(agg: &TournamentAggregateStats) -> Self {
         Self {
-            passing: 0.1 * agg.passing_blocks as f64 * inv_games
-                + 7.0 * agg.touchdown_passes as f64 * inv_games
-                - 2.0 * agg.pass_interceptions as f64 * inv_games,
-            receiving: 0.1 * agg.receive_blocks as f64 * inv_games
-                + 7.0 * agg.touchdowns as f64 * inv_games
-                + 0.5 * agg.catches as f64 * inv_games,
-            defense: 0.15 * agg.damage_carrier as f64 * inv_games
-                + 4.0 * agg.strips as f64 * inv_games
-                + 4.0 * agg.defensive_interceptions as f64 * inv_games,
-            pvp: 0.8 * agg.kills as f64 * inv_games - 0.7 * agg.deaths as f64 * inv_games
-                + 0.01 * agg.damage_dealt * inv_games,
+            passing: 0.03 * agg.passing_blocks as f64
+                + 11.0 * agg.touchdown_passes as f64
+                - 1.4 * agg.pass_interceptions as f64,
+            receiving: 0.09 * agg.catches as f64
+                + 0.03 * agg.receive_blocks as f64
+                + 11.0 * agg.touchdowns as f64,
+            defense: 6.0 * agg.defensive_interceptions as f64
+                + 6.0 * agg.strips as f64
+                + 0.055 * agg.damage_carrier as f64,
+            pvp: 0.085 * agg.kills as f64 + 0.015 * agg.damage_dealt,
         }
     }
 
     #[inline(always)]
     fn offense(&self) -> f64 {
         self.passing + self.receiving
+    }
+
+    #[inline(always)]
+    fn total(&self) -> f64 {
+        self.offense() + self.defense + self.pvp
+    }
+}
+
+struct RatingScores {
+    offense: f64,
+    passing: f64,
+    receiving: f64,
+    defense: f64,
+    pvp: f64,
+    total: f64,
+}
+
+impl RatingScores {
+    fn from_weighted(weighted: &WeightedScores, games: u32, avg: &WeightedScores) -> Self {
+        let gp = games as f64;
+        let bayesian = |w: f64, avg_w: f64| ((w * gp) + (avg_w * 2.0)) / (gp + 2.0);
+
+        Self {
+            offense: bayesian(weighted.offense(), avg.offense()),
+            passing: bayesian(weighted.passing, avg.passing),
+            receiving: bayesian(weighted.receiving, avg.receiving),
+            defense: bayesian(weighted.defense, avg.defense),
+            pvp: bayesian(weighted.pvp, avg.pvp),
+            total: bayesian(weighted.total(), avg.total()),
+        }
     }
 }
 
@@ -111,35 +139,26 @@ struct IndexScores {
     receiving: f64,
     defense: f64,
     pvp: f64,
-    weighted: f64,
+    total: f64,
 }
 
 impl IndexScores {
-    fn from_fantasy(f: &FantasyScores, sums: (f64, f64, f64, f64), n: f64) -> Self {
-        let (sum_p, sum_r, sum_d, sum_pvp) = sums;
-        let sum_offense = sum_p + sum_r;
-
-        let safe_idx = |val: f64, sum: f64| {
-            if sum.abs() > 0.001 * n {
-                val * n / sum
+    fn from_rating(rating: &RatingScores, avg_weighted: &WeightedScores) -> Self {
+        let safe_div = |val: f64, divisor: f64| {
+            if divisor.abs() > 0.001 {
+                val / divisor
             } else {
                 0.0
             }
         };
 
-        let offense = safe_idx(f.offense(), sum_offense);
-        let passing = safe_idx(f.passing, sum_p);
-        let receiving = safe_idx(f.receiving, sum_r);
-        let defense = safe_idx(f.defense, sum_d);
-        let pvp = safe_idx(f.pvp, sum_pvp);
-
         Self {
-            offense,
-            passing,
-            receiving,
-            defense,
-            pvp,
-            weighted: (1.5 * offense + defense + pvp) / 3.5,
+            offense: safe_div(rating.offense, avg_weighted.offense()),
+            passing: safe_div(rating.passing, avg_weighted.passing),
+            receiving: safe_div(rating.receiving, avg_weighted.receiving),
+            defense: safe_div(rating.defense, avg_weighted.defense),
+            pvp: safe_div(rating.pvp, avg_weighted.pvp),
+            total: safe_div(rating.total, avg_weighted.total()),
         }
     }
 }
@@ -167,7 +186,7 @@ impl Award {
     #[inline(always)]
     fn score(&self, idx: &IndexScores) -> f64 {
         match self {
-            Self::Mvp => idx.weighted,
+            Self::Mvp => idx.total,
             Self::Opot => idx.offense,
             Self::Dpot => idx.defense,
             Self::OlDl => idx.pvp,
@@ -270,22 +289,33 @@ pub async fn get_tournament_by_id(
             new_acc
         });
 
-    let player_fantasy: Vec<(Uuid, FantasyScores)> = player_aggregates
+    let player_weighted: Vec<(Uuid, WeightedScores, u32)> = player_aggregates
         .iter()
-        .map(|(uuid, (agg, games))| (*uuid, FantasyScores::from_aggregate(agg, *games)))
+        .map(|(uuid, (agg, games))| (*uuid, WeightedScores::from_aggregate(agg), *games))
         .collect();
 
-    let sums = player_fantasy
-        .iter()
-        .map(|(_, f)| (f.passing, f.receiving, f.defense, f.pvp))
-        .fold((0.0, 0.0, 0.0, 0.0), |(p, r, d, v), (fp, fr, fd, fv)| {
-            (p + fp, r + fr, d + fd, v + fv)
-        });
+    let n = player_weighted.len() as f64;
+    let avg_weighted = player_weighted.iter().fold(
+        WeightedScores {
+            passing: 0.0,
+            receiving: 0.0,
+            defense: 0.0,
+            pvp: 0.0,
+        },
+        |acc, (_, w, _)| WeightedScores {
+            passing: acc.passing + w.passing / n,
+            receiving: acc.receiving + w.receiving / n,
+            defense: acc.defense + w.defense / n,
+            pvp: acc.pvp + w.pvp / n,
+        },
+    );
 
-    let n = player_fantasy.len() as f64;
-    let player_indexes: Vec<(Uuid, IndexScores)> = player_fantasy
+    let player_indexes: Vec<(Uuid, IndexScores)> = player_weighted
         .iter()
-        .map(|(uuid, f)| (*uuid, IndexScores::from_fantasy(f, sums, n)))
+        .map(|(uuid, w, games)| {
+            let rating = RatingScores::from_weighted(w, *games, &avg_weighted);
+            (*uuid, IndexScores::from_rating(&rating, &avg_weighted))
+        })
         .collect();
 
     let (award_map, _) = Award::PRIORITY_ORDER.iter().fold(
@@ -309,7 +339,7 @@ pub async fn get_tournament_by_id(
 
     let all_tournament: Vec<Uuid> = {
         let mut sorted: Vec<_> = player_indexes.iter().collect();
-        sorted.sort_by(|a, b| b.1.weighted.total_cmp(&a.1.weighted));
+        sorted.sort_by(|a, b| b.1.total.total_cmp(&a.1.total));
         sorted.into_iter().take(5).map(|(uuid, _)| *uuid).collect()
     };
 
