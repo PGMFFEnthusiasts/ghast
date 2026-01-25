@@ -61,7 +61,7 @@ const TournamentCard = (props: { data: TournamentListItem }) => (
     <div class='flex flex-col gap-2'>
       <For each={props.data.captains}>
         {(captain, i) => (
-          <Team captain={captain} winner={i() === props.data.winnerTeamId} />
+          <Team captain={captain} winner={i() + 1 === props.data.winnerTeamId} />
         )}
       </For>
     </div>
