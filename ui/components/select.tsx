@@ -51,7 +51,7 @@ export const SelectTrigger = <T extends ValidComponent = `button`>(
   return (
     <SelectPrimitive.Trigger
       class={cn(
-        `group flex items-center justify-between gap-1 rounded-md border border-white/10 bg-[#242C39] px-1.5 py-0.5 text-white transition-colors outline-none hover:bg-[#2E3642]`,
+        `group flex items-center justify-between gap-2 rounded-md border border-white/10 bg-[#242C39] px-2.5 py-1 text-white transition-colors outline-none hover:bg-[#2E3642]`,
         props.class,
       )}
       {...rest}

@@ -10,7 +10,7 @@ const Matches = lazy(() => import(`@/pages/matches`));
 const Lander = lazy(() => import(`@/pages/lander`));
 const DiscordPage = lazy(() => import(`@/pages/discord`));
 const PassPage = lazy(() => import(`@/pages/pass`));
-const TournamentDetail = lazy(() => import(`@/pages/tournament-detail`));
+const TournamentDetail = lazy(() => import(`@/pages/tournament-stats`));
 
 export const App = () => (
   <>
