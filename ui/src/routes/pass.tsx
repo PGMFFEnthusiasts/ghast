@@ -11,21 +11,6 @@ const PassPage = () => (
         <span class='text-secondary'>Read the following carefully...</span>
       </h1>
 
-      {/*<div class='my-8 rounded outline-2 outline-current/20'>
-        <div class='mx-auto h-36 w-0.5 bg-gradient-to-b from-current/20 to-current/0' />
-        <div class='flex flex-row items-center'>
-          <div class='h-0.5 flex-1 bg-gradient-to-r from-current/20 to-current/0' />
-          <div class='text-center'>
-            <span class='py-8 text-center text-3xl font-black text-black dark:text-white'>
-              ⚠️ This is important ⚠️ <br />
-              You will not skip this document.
-            </span>
-          </div>
-          <div class='h-0.5 flex-1 bg-gradient-to-l from-current/20 to-current/0' />
-        </div>
-        <div class='mx-auto h-36 w-0.5 bg-gradient-to-t from-current/20 to-current/0' />
-      </div>*/}
-
       <hr />
 
       <h1 class='text-secondary'>

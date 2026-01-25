@@ -1,24 +1,20 @@
-import { A } from '@solidjs/router';
+import { A, createAsync, type RouteDefinition } from '@solidjs/router';
 import { clsx } from 'clsx';
-import { createResource, For, Show, Suspense } from 'solid-js';
+import { For, Show, Suspense } from 'solid-js';
 
-import type { Player, TournamentData } from '@/utils/types';
+import type { Player, TournamentListItem } from '@/utils/types';
 
 import { Layout } from '@/components/layouts/the-layout';
 import { Crown, Link, Swords, Users } from '@/icons';
 import { formatReallyLongTime } from '@/utils';
+import { getTournaments } from '@/utils/api';
 
-type TournamentListItem = TournamentData & { id: number };
-
-const getData = async (): Promise<TournamentListItem[]> => {
-  const apiRoot =
-    import.meta.env.VITE_API_ROOT ?? `https://tombrady.fireballs.me/api/`;
-  const res = await fetch(new URL(`tournaments/all`, apiRoot));
-  return res.status === 200 ? ((await res.json()) as TournamentListItem[]) : [];
-};
+export const route = {
+  preload: () => getTournaments(),
+} satisfies RouteDefinition;
 
 const TournamentsPage = () => {
-  const [tournaments] = createResource<TournamentListItem[]>(() => getData());
+  const tournaments = createAsync(() => getTournaments());
 
   return (
     <Layout description='What it says above.' title='Tournaments'>
@@ -61,7 +57,10 @@ const TournamentCard = (props: { data: TournamentListItem }) => (
     <div class='flex flex-col gap-2'>
       <For each={props.data.captains}>
         {(captain, i) => (
-          <Team captain={captain} winner={i() + 1 === props.data.winnerTeamId} />
+          <Team
+            captain={captain}
+            winner={i() + 1 === props.data.winnerTeamId}
+          />
         )}
       </For>
     </div>

@@ -1,3 +1,4 @@
+import { createAsync, type RouteDefinition } from '@solidjs/router';
 import {
   ClientSideRowModelModule,
   ColumnAutoSizeModule,
@@ -11,7 +12,7 @@ import {
   PaginationModule,
   TextFilterModule,
 } from 'ag-grid-community';
-import { createResource, onMount, Show, Suspense } from 'solid-js';
+import { onMount, Show, Suspense } from 'solid-js';
 
 import type { Match, Matches, Player } from '@/utils/types';
 
@@ -22,17 +23,13 @@ import {
   formatReallyLongTime,
   divHtml as html,
 } from '@/utils';
-import { gridTheme } from '@/utils/grid';
+import { getMatches } from '@/utils/api';
+import { getGridTheme } from '@/utils/grid';
 
-const getData = async (): Promise<Matches> => {
-  const apiRoot =
-    import.meta.env.VITE_API_ROOT ?? `https://tombrady.fireballs.me/api/`;
-  const res = await fetch(new URL(`matches/all`, apiRoot));
-  if (res.status !== 200) return [];
-  return (await res.json()) as Matches;
-};
+export const route = {
+  preload: () => getMatches(),
+} satisfies RouteDefinition;
 
-// like yeah ik theres the type for this but like idc ts is not good
 const linkCellRenderer = (params: { data: Match }) => html`
   <a
     href="/matches/${params.data.id.toString()}"
@@ -42,7 +39,6 @@ const linkCellRenderer = (params: { data: Match }) => html`
   </a>
 `;
 
-// same here
 const playersCellRenderer = (params: { data: { players: Player[] } }) => {
   const div = document.createElement(`div`);
   div.setAttribute(
@@ -50,8 +46,6 @@ const playersCellRenderer = (params: { data: { players: Player[] } }) => {
     `flex items-center h-full overflow-hidden w-[288px]`,
   );
 
-  // so that the players don't change order every refresh
-  // but idk if its better this way
   params.data.players.sort((_a, _b) => {
     const { a, b } = { a: _a.uuid, b: _b.uuid };
     return (
@@ -179,7 +173,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
         },
       ],
       onGridReady: (ctx) => {
-        if (window.innerWidth >= 1280) {
+        if (typeof window !== `undefined` && window.innerWidth >= 1280) {
           ctx.api.sizeColumnsToFit();
         } else {
           ctx.api.autoSizeAllColumns();
@@ -189,7 +183,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
       paginationPageSize: 20,
       rowData: props.matches.toSorted((a, b) => b.id - a.id),
       suppressDragLeaveHidesColumns: true,
-      theme: gridTheme,
+      theme: getGridTheme(),
     });
 
     return () => {
@@ -216,7 +210,7 @@ const MatchesGrid = (props: { matches: Matches }) => {
 };
 
 const MatchesPage = () => {
-  const [matches] = createResource<Matches>(() => getData());
+  const matches = createAsync(() => getMatches());
 
   return (
     <>

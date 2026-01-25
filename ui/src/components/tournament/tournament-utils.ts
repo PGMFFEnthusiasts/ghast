@@ -1,12 +1,18 @@
 import { fetchSkinAsDataUrl } from '@/components/tournament/minecraft-skin';
 
-export const getColumnCount = () =>
-  window.innerWidth >= 1024 ? 3
-  : window.innerWidth >= 640 ? 2
-  : 1;
+export const getColumnCount = () => {
+  if (typeof window === `undefined`) return 3;
+  return (
+    window.innerWidth >= 1024 ? 3
+    : window.innerWidth >= 640 ? 2
+    : 1
+  );
+};
 
 export const nextFrame = () =>
-  new Promise((resolve) => requestAnimationFrame(resolve));
+  typeof requestAnimationFrame !== `undefined` ?
+    new Promise((resolve) => requestAnimationFrame(resolve))
+  : Promise.resolve();
 
 export const createResizeHandler = (setColumns: (_: number) => void) => () =>
   void setColumns(getColumnCount());

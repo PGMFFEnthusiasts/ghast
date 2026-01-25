@@ -4,15 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "preview": "npx serve .output/public",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier . --write"
   },
   "dependencies": {
     "@solidjs/router": "^0.15.4",
+    "@solidjs/start": "^1.2.1",
     "@tailwindcss/vite": "^4.1.18",
     "ag-grid-community": "^35.0.0",
     "clsx": "^2.1.1",
@@ -25,18 +26,14 @@
     "solid-sonner": "^0.2.8",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
-    "unified": "^11.0.5"
+    "unified": "^11.0.5",
+    "vinxi": "^0.5.11"
   },
   "devDependencies": {
     "@hiddenability/opinionated-defaults": "^0.1.47",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^25.0.9",
     "jiti": "^2.6.1",
-    "typescript": "~5.9.3",
-    "vite": "npm:rolldown-vite@7.3.1",
-    "vite-plugin-solid": "^2.11.10"
-  },
-  "overrides": {
-    "vite": "npm:rolldown-vite@7.2.5"
+    "typescript": "~5.9.3"
   }
 }

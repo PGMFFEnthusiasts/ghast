@@ -15,7 +15,7 @@ import type { PlayerData, TournamentTeam } from '@/utils/types';
 import { Button } from '@/components/button';
 import { Csv } from '@/icons';
 import { divHtml as html } from '@/utils';
-import { gridTheme } from '@/utils/grid';
+import { getGridTheme } from '@/utils/grid';
 
 const TEAM_COLORS = [
   `text-red-400`,
@@ -129,7 +129,7 @@ export const AggregateStatsTable = (props: {
       onGridReady: (params) => params.api.autoSizeAllColumns(),
       rowData: props.players,
       suppressDragLeaveHidesColumns: true,
-      theme: gridTheme,
+      theme: getGridTheme(),
     });
 
     setCurrentGrid(grid);

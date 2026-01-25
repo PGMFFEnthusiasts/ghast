@@ -88,6 +88,8 @@ export type TournamentDetailedData = {
   winnerTeamId: number;
 };
 
+export type TournamentListItem = TournamentData & { id: number };
+
 export type TournamentMatchData = {
   duration: number;
   matchId: number;

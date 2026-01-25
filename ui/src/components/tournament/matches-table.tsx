@@ -16,7 +16,7 @@ import {
   formatReallyLongTime,
   divHtml as html,
 } from '@/utils';
-import { gridTheme } from '@/utils/grid';
+import { getGridTheme } from '@/utils/grid';
 
 const linkCellRenderer = (params: { data: TournamentMatchData }) => html`
   <a
@@ -113,7 +113,7 @@ export const MatchesTable = (props: {
       onGridReady: (params) => params.api.autoSizeAllColumns(),
       rowData: props.matches,
       suppressDragLeaveHidesColumns: true,
-      theme: gridTheme,
+      theme: getGridTheme(),
     });
 
     onCleanup(() => {

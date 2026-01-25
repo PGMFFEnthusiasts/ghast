@@ -1,7 +1,6 @@
-import { useParams } from '@solidjs/router';
+import { createAsync, type RouteDefinition, useParams } from '@solidjs/router';
 import { toPng } from 'html-to-image';
 import {
-  createResource,
   createSignal,
   For,
   onCleanup,
@@ -38,21 +37,15 @@ import {
 } from '@/components/tournament';
 import { Image } from '@/icons';
 import { formatReallyLongTime } from '@/utils';
+import { getTournamentDetail } from '@/utils/api';
 
-const getData = async (
-  id: string,
-): Promise<TournamentDetailedData | undefined> => {
-  const apiRoot =
-    import.meta.env.VITE_API_ROOT ?? `https://tombrady.fireballs.me/api/`;
-  const res = await fetch(new URL(`tournaments/${id}`, apiRoot));
-  return res.status === 200 ?
-      ((await res.json()) as TournamentDetailedData)
-    : undefined;
-};
+export const route = {
+  preload: ({ params }) => getTournamentDetail(params.id),
+} satisfies RouteDefinition;
 
 const TournamentDetailPage = () => {
   const params = useParams();
-  const [tournament] = createResource(() => params.id, getData);
+  const tournament = createAsync(() => getTournamentDetail(params.id));
 
   return (
     <Suspense

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { useParams } from '@solidjs/router';
+import { createAsync, type RouteDefinition, useParams } from '@solidjs/router';
 import {
   type CellKeyDownEvent,
   ClientSideRowModelModule,
@@ -13,13 +13,7 @@ import {
   ModuleRegistry,
   TextFilterModule,
 } from 'ag-grid-community';
-import {
-  createResource,
-  createSignal,
-  onMount,
-  Show,
-  Suspense,
-} from 'solid-js';
+import { createSignal, onMount, Show, Suspense } from 'solid-js';
 import { toast } from 'solid-sonner';
 
 import { Button } from '@/components/button';
@@ -30,17 +24,13 @@ import {
   formatReallyLongTime,
   divHtml as html,
 } from '@/utils';
-import { gridTheme } from '@/utils/grid';
+import { getMatchUber } from '@/utils/api';
+import { getGridTheme } from '@/utils/grid';
 import { type PlayerData, type Uber } from '@/utils/types';
 
-const getData = async (id: string | undefined): Promise<Uber | undefined> => {
-  if (!id) return undefined;
-  const apiRoot =
-    import.meta.env.VITE_API_ROOT ?? `https://tombrady.fireballs.me/api/`;
-  const res = await fetch(apiRoot + `matches/${id}/uber`);
-  if (res.status !== 200) return undefined;
-  return (await res.json()) as Uber;
-};
+export const route = {
+  preload: ({ params }) => getMatchUber(params.id),
+} satisfies RouteDefinition;
 
 const redColor = `text-red-600`;
 const blueColor = `text-blue-600`;
@@ -139,7 +129,9 @@ const Stats = (props: { data: Uber }) => {
           filter: true,
           headerName: `Team`,
           sort:
-            localStorage.getItem(`ihatekunet`) === null ? `desc` : undefined,
+            localStorage.getItem(`ihatekunet`) === undefined ?
+              `desc`
+            : undefined,
           valueGetter: (p) => teamNames()[p.data!.stats.team - 1],
         },
         {
@@ -201,7 +193,7 @@ const Stats = (props: { data: Uber }) => {
       },
       rowData: props.data.players,
       suppressDragLeaveHidesColumns: true,
-      theme: gridTheme,
+      theme: getGridTheme(),
     });
 
     grid.addEventListener(`cellKeyDown`, (e) => {
@@ -281,7 +273,7 @@ const Stats = (props: { data: Uber }) => {
 
 const StatsPage = () => {
   const params = useParams();
-  const [data] = createResource<Uber | undefined>(() => getData(params.id));
+  const data = createAsync(() => getMatchUber(params.id));
 
   return (
     <>

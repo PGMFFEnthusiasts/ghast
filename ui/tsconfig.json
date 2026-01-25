@@ -27,7 +27,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     }
-  }
+  },
+  "include": ["src/**/*", "app.config.ts", "eslint.config.ts", "prettier.config.mjs"]
 }

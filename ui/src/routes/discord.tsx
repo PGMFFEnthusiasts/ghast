@@ -14,7 +14,6 @@ const DiscordPage = () => (
       </h2>
       <p>Hi there! You can find our Discord server link here:</p>
     </section>
-    {/* this is cooked and out of prev section bc not-prose doesn't reset currentColor */}
     <section>
       <a
         class={`${buttonStyles(`bg-button`)} gap-2`}
