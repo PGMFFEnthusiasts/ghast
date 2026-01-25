@@ -1,4 +1,6 @@
+export { ArrowRight } from './arrow-right';
 export { ArrowUp } from './arrow-up';
+export { ChevronLeft } from './chevron-left';
 export { Crown } from './crown';
 export { Csv } from './csv';
 export { Discord } from './discord';

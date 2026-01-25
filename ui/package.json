@@ -12,6 +12,7 @@
     "format": "prettier . --write"
   },
   "dependencies": {
+    "@kobalte/core": "^0.13.11",
     "@solidjs/router": "^0.15.4",
     "@tailwindcss/vite": "^4.1.18",
     "ag-grid-community": "^35.0.0",

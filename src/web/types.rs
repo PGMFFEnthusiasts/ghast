@@ -47,10 +47,13 @@ pub struct TournamentPlayerInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct TournamentPlayerWithStats {
     pub uuid: String,
     pub username: String,
     pub stats: TournamentAggregateStats,
+    pub matches_played: u32,
+    pub time_played: u32,
 }
 
 #[derive(Serialize, Deserialize, Clone)]

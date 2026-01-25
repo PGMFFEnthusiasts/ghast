@@ -35,7 +35,9 @@ export type Player = {
 };
 
 export type PlayerData = Player & {
+  matchesPlayed: number;
   stats: Stats;
+  timePlayed: number;
 };
 
 export type PlayerStats = PlayerData[];

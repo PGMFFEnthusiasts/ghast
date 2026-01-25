@@ -1,14 +1,53 @@
 import { A } from '@solidjs/router';
 import { clsx } from 'clsx';
-import { createResource, For, Show, Suspense } from 'solid-js';
+import {
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+  Suspense,
+} from 'solid-js';
 
 import type { Player, TournamentData } from '@/utils/types';
 
 import { Layout } from '@/components/layouts/the-layout';
-import { Crown, Link, Swords, Users } from '@/icons';
+import { ArrowRight, Crown, Swords, Users } from '@/icons';
 import { formatReallyLongTime } from '@/utils';
 
 type TournamentListItem = TournamentData & { id: number };
+
+const useColumnCount = (breakpoints: { base: number; md?: number; lg?: number }) => {
+  const [columnCount, setColumnCount] = createSignal(breakpoints.base);
+
+  onMount(() => {
+    const updateColumns = () => {
+      const width = window.innerWidth;
+      if (width >= 1024 && breakpoints.lg !== undefined) {
+        setColumnCount(breakpoints.lg);
+      } else if (width >= 768 && breakpoints.md !== undefined) {
+        setColumnCount(breakpoints.md);
+      } else {
+        setColumnCount(breakpoints.base);
+      }
+    };
+    updateColumns();
+    window.addEventListener('resize', updateColumns);
+    onCleanup(() => window.removeEventListener('resize', updateColumns));
+  });
+
+  return columnCount;
+};
+
+const distributeToColumns = <T,>(items: T[], columnCount: number): T[][] => {
+  const columns: T[][] = Array.from({ length: columnCount }, () => []);
+  items.forEach((item, i) => {
+    columns[i % columnCount].push(item);
+  });
+  return columns;
+};
 
 const getData = async (): Promise<TournamentListItem[]> => {
   const apiRoot =
@@ -19,6 +58,11 @@ const getData = async (): Promise<TournamentListItem[]> => {
 
 const TournamentsPage = () => {
   const [tournaments] = createResource<TournamentListItem[]>(() => getData());
+  const columnCount = useColumnCount({ base: 1, md: 2, lg: 3 });
+
+  const columns = createMemo(() =>
+    tournaments() ? distributeToColumns(tournaments()!, columnCount()) : [],
+  );
 
   return (
     <Layout description='What it says above.' title='Tournaments'>
@@ -41,9 +85,15 @@ const TournamentsPage = () => {
           fallback={<div class='text-secondary'>No tournaments found.</div>}
           when={tournaments() && tournaments()!.length > 0}
         >
-          <div class='columns-1 gap-4 md:columns-2 lg:columns-3'>
-            <For each={tournaments()}>
-              {(tournament) => <TournamentCard data={tournament} />}
+          <div class='flex gap-4'>
+            <For each={columns()}>
+              {(col) => (
+                <div class='flex flex-1 flex-col gap-4'>
+                  <For each={col}>
+                    {(tournament) => <TournamentCard data={tournament} />}
+                  </For>
+                </div>
+              )}
             </For>
           </div>
         </Show>
@@ -53,7 +103,7 @@ const TournamentsPage = () => {
 };
 
 const TournamentCard = (props: { data: TournamentListItem }) => (
-  <div class='mb-4 flex break-inside-avoid flex-col gap-4 rounded-xl border border-white/6 bg-white/3 p-7'>
+  <div class='flex flex-col gap-4 rounded-xl border border-white/6 bg-white/3 p-7'>
     <div class='flex flex-col'>
       <h1 class='text-xl font-black'>{props.data.name}</h1>
       <h2 class='text-secondary'>{formatReallyLongTime(props.data.date)}</h2>
@@ -61,7 +111,10 @@ const TournamentCard = (props: { data: TournamentListItem }) => (
     <div class='flex flex-col gap-2'>
       <For each={props.data.captains}>
         {(captain, i) => (
-          <Team captain={captain} winner={i() + 1 === props.data.winnerTeamId} />
+          <Team
+            captain={captain}
+            winner={i() + 1 === props.data.winnerTeamId}
+          />
         )}
       </For>
     </div>
@@ -79,13 +132,13 @@ const TournamentCard = (props: { data: TournamentListItem }) => (
         </span>
       </span>
       <A
-        class='inline-flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 py-2 pr-2 pl-2.5 text-secondary transition-colors hover:border-white/12 hover:bg-white/6 hover:text-primary'
+        class='inline-flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 py-2 pr-3 pl-2.5 text-secondary transition-colors hover:border-white/12 hover:bg-white/6 hover:text-primary'
         href={`/tournaments/${props.data.id}`}
       >
         <span class='hidden font-rubik sm:block md:hidden 2xl:block'>
           Go to Tournament
         </span>
-        <Link class='-mt-[2px] size-6' />
+        <ArrowRight class='size-4' />
       </A>
     </div>
   </div>

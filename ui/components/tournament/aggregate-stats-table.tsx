@@ -7,12 +7,22 @@ import {
   ModuleRegistry,
   TextFilterModule,
 } from 'ag-grid-community';
-import { createSignal, onMount } from 'solid-js';
+import { createEffect, createMemo, createSignal, onMount } from 'solid-js';
 import { toast } from 'solid-sonner';
 
-import type { PlayerData, TournamentTeam } from '@/utils/types';
+import type { PlayerData, Stats, TournamentTeam } from '@/utils/types';
+
+type NormalizationMode = `perMatch` | `perMinute` | `total`;
 
 import { Button } from '@/components/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/select';
 import { Csv } from '@/icons';
 import { divHtml as html } from '@/utils';
 import { gridTheme } from '@/utils/grid';
@@ -58,6 +68,36 @@ const teamCellRenderer =
     >`;
   };
 
+const EXCLUDED_STATS_KEYS = new Set<keyof Stats>([`killstreak`, `team`]);
+
+const NORMALIZATION_OPTIONS: { label: string; value: NormalizationMode }[] = [
+  { label: `Total`, value: `total` },
+  { label: `Avg/Match`, value: `perMatch` },
+  { label: `Avg/Min`, value: `perMinute` },
+];
+
+const normalizeStats = (stats: Stats, divisor: number): Stats =>
+  Object.fromEntries(
+    Object.entries(stats).map(([key, value]) =>
+      EXCLUDED_STATS_KEYS.has(key as keyof Stats) || typeof value !== `number` ?
+        [key, value]
+      : [key, value / divisor],
+    ),
+  ) as Stats;
+
+const normalizePlayer = (
+  player: PlayerData,
+  mode: NormalizationMode,
+): PlayerData => {
+  const divisor =
+    mode === `perMatch` ? player.matchesPlayed
+    : mode === `perMinute` ? player.timePlayed / 60
+    : 1;
+  return divisor === 0 || divisor === 1 ?
+      player
+    : { ...player, stats: normalizeStats(player.stats, divisor) };
+};
+
 export const AggregateStatsTable = (props: {
   players: PlayerData[];
   teams: TournamentTeam[];
@@ -65,6 +105,21 @@ export const AggregateStatsTable = (props: {
 }) => {
   let gridRef: HTMLDivElement | undefined;
   const [currentGrid, setCurrentGrid] = createSignal<GridApi<PlayerData>>();
+  const [normalizationMode, setNormalizationMode] =
+    createSignal<NormalizationMode>(`total`);
+
+  const normalizedPlayers = createMemo(() =>
+    props.players.map((player) => normalizePlayer(player, normalizationMode())),
+  );
+
+  const numericValueFormatter = (v: { value: unknown }) =>
+    typeof v.value === `number` ?
+      normalizationMode() === `total` ?
+        Number.isInteger(v.value) ?
+          String(v.value)
+        : v.value.toFixed(2)
+      : v.value.toFixed(2)
+    : `0`;
 
   onMount(() => {
     ModuleRegistry.registerModules([
@@ -96,38 +151,89 @@ export const AggregateStatsTable = (props: {
           headerName: `Kills`,
           sort: `desc`,
           sortIndex: 1,
+          valueFormatter: numericValueFormatter,
         },
-        { field: `stats.deaths`, headerName: `Deaths` },
-        { field: `stats.assists`, headerName: `Assists` },
+        {
+          field: `stats.deaths`,
+          headerName: `Deaths`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.assists`,
+          headerName: `Assists`,
+          valueFormatter: numericValueFormatter,
+        },
         { field: `stats.killstreak`, headerName: `Streak` },
         {
           field: `stats.damage_dealt`,
           headerName: `DMG Out`,
-          valueFormatter: (v) =>
-            typeof v.value === `number` ? v.value.toFixed(2) : `0`,
+          valueFormatter: numericValueFormatter,
         },
         {
           field: `stats.damage_taken`,
           headerName: `DMG In`,
-          valueFormatter: (v) =>
-            typeof v.value === `number` ? v.value.toFixed(2) : `0`,
+          valueFormatter: numericValueFormatter,
         },
-        { field: `stats.pickups`, headerName: `Pickups` },
-        { field: `stats.throws`, headerName: `Throws` },
-        { field: `stats.passes`, headerName: `Passes` },
-        { field: `stats.catches`, headerName: `Catches` },
-        { field: `stats.strips`, headerName: `Strips` },
-        { field: `stats.touchdowns`, headerName: `TDs` },
-        { field: `stats.touchdown_passes`, headerName: `TD Passes` },
-        { field: `stats.passing_blocks`, headerName: `Pass (m)` },
-        { field: `stats.receive_blocks`, headerName: `Catch (m)` },
-        { field: `stats.defensive_interceptions`, headerName: `Def Int` },
-        { field: `stats.pass_interceptions`, headerName: `Pass Int` },
+        {
+          field: `stats.pickups`,
+          headerName: `Pickups`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.throws`,
+          headerName: `Throws`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.passes`,
+          headerName: `Passes`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.catches`,
+          headerName: `Catches`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.strips`,
+          headerName: `Strips`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.touchdowns`,
+          headerName: `TDs`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.touchdown_passes`,
+          headerName: `TD Passes`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.passing_blocks`,
+          headerName: `Pass (m)`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.receive_blocks`,
+          headerName: `Catch (m)`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.defensive_interceptions`,
+          headerName: `Def Int`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `stats.pass_interceptions`,
+          headerName: `Pass Int`,
+          valueFormatter: numericValueFormatter,
+        },
       ],
       defaultColDef: { initialWidth: 80 },
       domLayout: `autoHeight`,
       onGridReady: (params) => params.api.autoSizeAllColumns(),
-      rowData: props.players,
+      rowData: normalizedPlayers(),
       suppressDragLeaveHidesColumns: true,
       theme: gridTheme,
     });
@@ -140,6 +246,15 @@ export const AggregateStatsTable = (props: {
     };
   });
 
+  createEffect(() => {
+    const grid = currentGrid();
+    const players = normalizedPlayers();
+    if (grid) {
+      grid.setGridOption(`rowData`, players);
+      grid.refreshCells({ force: true });
+    }
+  });
+
   const handleExportCsv = () => {
     const grid = currentGrid();
     if (!grid) return;
@@ -150,9 +265,35 @@ export const AggregateStatsTable = (props: {
 
   return (
     <section>
-      <div class='mb-4 flex items-center gap-3'>
-        <h2 class='text-xl font-bold'>Aggregate Player Stats</h2>
-        <Button class='size-8' onClick={handleExportCsv} title='Export CSV'>
+      <div class='mb-4 flex flex-wrap items-center gap-3'>
+        <h2 class='flex items-center gap-1.5 text-xl'>
+          <Select
+            defaultValue={NORMALIZATION_OPTIONS[0]}
+            disallowEmptySelection
+            gutter={6}
+            placement="top-start"
+            itemComponent={(itemProps) => (
+              <SelectItem item={itemProps.item}>
+                {itemProps.item.rawValue.label}
+              </SelectItem>
+            )}
+            onChange={(option) => option && setNormalizationMode(option.value)}
+            optionTextValue="label"
+            optionValue="value"
+            options={NORMALIZATION_OPTIONS}
+          >
+            <SelectTrigger class='text-xl'>
+              <SelectValue<(typeof NORMALIZATION_OPTIONS)[0]>>
+                {(state) => state.selectedOption().label}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectContent />
+            </SelectPortal>
+          </Select>
+          Player Stats
+        </h2>
+        <Button class='ml-auto size-8' onClick={handleExportCsv} title='Export CSV'>
           <Csv />
         </Button>
       </div>

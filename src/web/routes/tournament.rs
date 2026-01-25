@@ -264,6 +264,10 @@ pub async fn get_tournament_by_id(
     let matches = matches.unwrap_or_default();
 
     let match_ids: Vec<u32> = matches.iter().map(|m| m.match_id).collect();
+    let match_duration_map: HashMap<u32, u32> = matches
+        .iter()
+        .map(|m| (m.match_id, m.duration))
+        .collect();
     let stats_by_match = state
         .database
         .get_player_stats_for_matches(&match_ids)
@@ -275,23 +279,26 @@ pub async fn get_tournament_by_id(
         .map(|p| (p.player_uuid, p.team_id))
         .collect();
 
-    let player_aggregates: HashMap<Uuid, (TournamentAggregateStats, u32)> = stats_by_match
-        .values()
-        .flat_map(|match_stats| match_stats.iter())
-        .fold(HashMap::new(), |acc, (uuid, stats)| {
+    let player_aggregates: HashMap<Uuid, (TournamentAggregateStats, u32, u32)> = stats_by_match
+        .iter()
+        .flat_map(|(match_id, match_stats)| {
+            let duration = match_duration_map.get(match_id).copied().unwrap_or(0);
+            match_stats.iter().map(move |(uuid, stats)| (uuid, stats, duration))
+        })
+        .fold(HashMap::new(), |acc, (uuid, stats, duration)| {
             let team_id = player_team_map.get(uuid).copied().unwrap_or(0);
-            let (current_agg, count) = acc
+            let (current_agg, count, time) = acc
                 .get(uuid)
                 .cloned()
-                .unwrap_or_else(|| (default_aggregate_stats(team_id), 0));
+                .unwrap_or_else(|| (default_aggregate_stats(team_id), 0, 0));
             let mut new_acc = acc;
-            new_acc.insert(*uuid, (add_stats(current_agg, stats), count + 1));
+            new_acc.insert(*uuid, (add_stats(current_agg, stats), count + 1, time + duration));
             new_acc
         });
 
     let player_weighted: Vec<(Uuid, WeightedScores, u32)> = player_aggregates
         .iter()
-        .map(|(uuid, (agg, games))| (*uuid, WeightedScores::from_aggregate(agg), *games))
+        .map(|(uuid, (agg, games, _time))| (*uuid, WeightedScores::from_aggregate(agg), *games))
         .collect();
 
     let n = player_weighted.len() as f64;
@@ -378,10 +385,10 @@ pub async fn get_tournament_by_id(
                 .iter()
                 .filter(|p| p.team_id == team.team_id)
                 .map(|p| {
-                    let stats = player_aggregates
+                    let (stats, matches_played, time_played) = player_aggregates
                         .get(&p.player_uuid)
-                        .map(|(agg, _)| agg.clone())
-                        .unwrap_or_else(|| default_aggregate_stats(team.team_id));
+                        .map(|(agg, count, time)| (agg.clone(), *count, *time))
+                        .unwrap_or_else(|| (default_aggregate_stats(team.team_id), 0, 0));
 
                     TournamentPlayerWithStats {
                         uuid: p.player_uuid.to_string(),
@@ -391,6 +398,8 @@ pub async fn get_tournament_by_id(
                             .flatten()
                             .unwrap_or_else(|| String::from("Unknown")),
                         stats,
+                        matches_played,
+                        time_played,
                     }
                 })
                 .collect();
