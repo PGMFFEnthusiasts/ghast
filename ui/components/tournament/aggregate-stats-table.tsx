@@ -271,16 +271,16 @@ export const AggregateStatsTable = (props: {
             defaultValue={NORMALIZATION_OPTIONS[0]}
             disallowEmptySelection
             gutter={6}
-            placement="top-start"
             itemComponent={(itemProps) => (
               <SelectItem item={itemProps.item}>
                 {itemProps.item.rawValue.label}
               </SelectItem>
             )}
             onChange={(option) => option && setNormalizationMode(option.value)}
-            optionTextValue="label"
-            optionValue="value"
             options={NORMALIZATION_OPTIONS}
+            optionTextValue='label'
+            optionValue='value'
+            placement='top-start'
           >
             <SelectTrigger class='text-xl'>
               <SelectValue<(typeof NORMALIZATION_OPTIONS)[0]>>
@@ -293,7 +293,11 @@ export const AggregateStatsTable = (props: {
           </Select>
           Player Stats
         </h2>
-        <Button class='ml-auto size-8' onClick={handleExportCsv} title='Export CSV'>
+        <Button
+          class='ml-auto size-8'
+          onClick={handleExportCsv}
+          title='Export CSV'
+        >
           <Csv />
         </Button>
       </div>

@@ -19,34 +19,29 @@ import { formatReallyLongTime } from '@/utils';
 
 type TournamentListItem = TournamentData & { id: number };
 
-const useColumnCount = (breakpoints: { base: number; md?: number; lg?: number }) => {
+const useColumnCount = (breakpoints: {
+  base: number;
+  lg?: number;
+  md?: number;
+}) => {
   const [columnCount, setColumnCount] = createSignal(breakpoints.base);
 
+  const updateColumns = () => {
+    const width = globalThis.innerWidth;
+    setColumnCount(
+      width >= 1024 && breakpoints.lg !== undefined ? breakpoints.lg
+      : width >= 768 && breakpoints.md !== undefined ? breakpoints.md
+      : breakpoints.base,
+    );
+  };
+
   onMount(() => {
-    const updateColumns = () => {
-      const width = window.innerWidth;
-      if (width >= 1024 && breakpoints.lg !== undefined) {
-        setColumnCount(breakpoints.lg);
-      } else if (width >= 768 && breakpoints.md !== undefined) {
-        setColumnCount(breakpoints.md);
-      } else {
-        setColumnCount(breakpoints.base);
-      }
-    };
     updateColumns();
-    window.addEventListener('resize', updateColumns);
-    onCleanup(() => window.removeEventListener('resize', updateColumns));
+    globalThis.addEventListener(`resize`, updateColumns);
+    onCleanup(() => globalThis.removeEventListener(`resize`, updateColumns));
   });
 
   return columnCount;
-};
-
-const distributeToColumns = <T,>(items: T[], columnCount: number): T[][] => {
-  const columns: T[][] = Array.from({ length: columnCount }, () => []);
-  items.forEach((item, i) => {
-    columns[i % columnCount].push(item);
-  });
-  return columns;
 };
 
 const getData = async (): Promise<TournamentListItem[]> => {
@@ -58,11 +53,17 @@ const getData = async (): Promise<TournamentListItem[]> => {
 
 const TournamentsPage = () => {
   const [tournaments] = createResource<TournamentListItem[]>(() => getData());
-  const columnCount = useColumnCount({ base: 1, md: 2, lg: 3 });
+  const columnCount = useColumnCount({ base: 1, lg: 3, md: 2 });
 
-  const columns = createMemo(() =>
-    tournaments() ? distributeToColumns(tournaments()!, columnCount()) : [],
-  );
+  const columns = createMemo(() => {
+    const items = tournaments();
+    const cols = columnCount();
+    return items ?
+        Array.from({ length: cols }, (_, col) =>
+          items.filter((_, i) => i % cols === col),
+        )
+      : [];
+  });
 
   return (
     <Layout description='What it says above.' title='Tournaments'>
