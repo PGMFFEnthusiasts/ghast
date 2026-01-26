@@ -82,7 +82,7 @@ export const SelectContent = <T extends ValidComponent = `div`>(
   return (
     <SelectPrimitive.Content
       class={cn(
-        `z-50 min-w-[8rem] overflow-hidden rounded-lg border border-white/10 bg-[#242C39] p-1 shadow-lg`,
+        `z-50 min-w-32 overflow-hidden rounded-lg border border-white/10 bg-[#242C39] p-1 shadow-lg`,
         `data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95`,
         props.class,
       )}
@@ -105,7 +105,7 @@ export const SelectItem = <T extends ValidComponent = `li`>(
   return (
     <SelectPrimitive.Item
       class={cn(
-        `relative flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-sm text-white transition-colors outline-none select-none hover:bg-[#2E3642] focus:bg-[#2E3642] data-[highlighted]:bg-[#2E3642]`,
+        `relative flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-sm text-white transition-colors outline-none select-none hover:bg-[#2E3642] focus:bg-[#2E3642] data-highlighted:bg-[#2E3642]`,
         props.class,
       )}
       {...rest}

@@ -70,7 +70,10 @@ const playersCellRenderer = (params: { data: { players: Player[] } }) => {
     img.setAttribute(`alt`, `${player.username}'s Head`);
     img.setAttribute(`title`, `${player.username}'s Head`);
     img.setAttribute(`class`, `size-6 shrink-0`);
-    img.setAttribute(`src`, `https://nmsr.nickac.dev/face/${player.uuid}?width=64`);
+    img.setAttribute(
+      `src`,
+      `https://nmsr.nickac.dev/face/${player.uuid}?width=64`,
+    );
     div.append(img);
   });
   if (params.data.players.length > 9) {

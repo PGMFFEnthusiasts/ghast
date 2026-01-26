@@ -11,12 +11,12 @@ export const PlayerLabel = (props: {
   <div
     class={clsx(
       `absolute left-1/2 flex -translate-x-1/2 flex-col items-center overflow-hidden rounded-lg border border-white/10 px-4 py-2`,
-      props.exportBlur ? `bg-[#0B101A]/90` : `bg-[#0B101A]/70 backdrop-blur-md`,
+      props.exportBlur ? `bg-[#0B101A]/90` : `bg-[#0B101A]/85 backdrop-blur-sm`,
       props.class ?? `bottom-16`,
     )}
   >
     <span
-      class='pointer-events-none absolute inset-x-0 -bottom-8 h-20 bg-radial from-current/50 to-transparent to-60% opacity-25'
+      class='pointer-events-none absolute -inset-x-2 bottom-0 h-48 translate-y-1/2 bg-radial from-current/15 to-transparent to-90%'
       style={{ color: props.glowColor ?? `#ffffff` }}
     />
     <span class='font-maple-mono text-lg font-semibold whitespace-nowrap'>

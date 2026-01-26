@@ -92,12 +92,17 @@ export const PlayerStatsHover = (props: { playerData: PlayerData }) => {
     { key: `killstreak`, label: `Streak` },
     { isDecimal: true, key: `damage_dealt`, label: `DMG Out` },
     { isDecimal: true, key: `damage_taken`, label: `DMG In` },
-    { key: `touchdowns`, label: `Touchdowns` },
-    { key: `touchdown_passes`, label: `TD Passes` },
+    { key: `pickups`, label: `Pickups` },
+    { key: `throws`, label: `Throws` },
     { key: `passes`, label: `Passes` },
     { key: `catches`, label: `Catches` },
     { key: `strips`, label: `Strips` },
-    { key: `pickups`, label: `Pickups` },
+    { key: `touchdowns`, label: `Touchdowns` },
+    { key: `touchdown_passes`, label: `TD Passes` },
+    { key: `passing_blocks`, label: `Pass (m)` },
+    { key: `receive_blocks`, label: `Catch (m)` },
+    { key: `defensive_interceptions`, label: `Def Int` },
+    { key: `pass_interceptions`, label: `Pass Int` },
   ];
 
   return (
@@ -144,7 +149,7 @@ export const PlayerStatsHover = (props: { playerData: PlayerData }) => {
         <div class='flex flex-col gap-1'>
           <IndexRow
             color={indexColors.mvp}
-            label='MVP'
+            label='General'
             value={indexes().total}
           />
           <IndexRow
@@ -160,12 +165,12 @@ export const PlayerStatsHover = (props: { playerData: PlayerData }) => {
           <IndexRow color={indexColors.pvp} label='PvP' value={indexes().pvp} />
           <IndexRow
             color={indexColors.passer}
-            label='Passer'
+            label='Passing'
             value={indexes().passing}
           />
           <IndexRow
             color={indexColors.receiver}
-            label='Receiver'
+            label='Receiving'
             value={indexes().receiving}
           />
         </div>

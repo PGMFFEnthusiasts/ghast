@@ -51,19 +51,38 @@ const getData = async (): Promise<TournamentListItem[]> => {
   return res.status === 200 ? ((await res.json()) as TournamentListItem[]) : [];
 };
 
-const TournamentsPage = () => {
-  const [tournaments] = createResource<TournamentListItem[]>(() => getData());
+const TournamentGrid = (props: { tournaments: TournamentListItem[] }) => {
   const columnCount = useColumnCount({ base: 1, lg: 3, md: 2 });
 
   const columns = createMemo(() => {
-    const items = tournaments();
     const cols = columnCount();
-    return items ?
-        Array.from({ length: cols }, (_, col) =>
-          items.filter((_, i) => i % cols === col),
-        )
-      : [];
+    return props.tournaments
+      .toSorted(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      )
+      .reduce<TournamentListItem[][]>(
+        (acc, item, i) => (acc[i % cols].push(item), acc),
+        Array.from({ length: cols }, () => []),
+      );
   });
+
+  return (
+    <div class='flex gap-4'>
+      <For each={columns()}>
+        {(col) => (
+          <div class='flex w-full flex-1 flex-col gap-4'>
+            <For each={col}>
+              {(tournament) => <TournamentCard data={tournament} />}
+            </For>
+          </div>
+        )}
+      </For>
+    </div>
+  );
+};
+
+const TournamentsPage = () => {
+  const [tournaments] = createResource<TournamentListItem[]>(() => getData());
 
   return (
     <Layout description='What it says above.' title='Tournaments'>
@@ -84,19 +103,9 @@ const TournamentsPage = () => {
       >
         <Show
           fallback={<div class='text-secondary'>No tournaments found.</div>}
-          when={tournaments() && tournaments()!.length > 0}
+          when={tournaments()?.length}
         >
-          <div class='flex gap-4'>
-            <For each={columns()}>
-              {(col) => (
-                <div class='flex flex-1 flex-col gap-4'>
-                  <For each={col}>
-                    {(tournament) => <TournamentCard data={tournament} />}
-                  </For>
-                </div>
-              )}
-            </For>
-          </div>
+          <TournamentGrid tournaments={tournaments()!} />
         </Show>
       </Suspense>
     </Layout>
@@ -104,80 +113,98 @@ const TournamentsPage = () => {
 };
 
 const TournamentCard = (props: { data: TournamentListItem }) => (
-  <div class='flex flex-col gap-4 rounded-xl border border-white/6 bg-white/3 p-7'>
-    <div class='flex flex-col'>
-      <h1 class='text-xl font-black'>{props.data.name}</h1>
-      <h2 class='text-secondary'>{formatReallyLongTime(props.data.date)}</h2>
-    </div>
-    <div class='flex flex-col gap-2'>
-      <For each={props.data.captains}>
-        {(captain, i) => (
-          <Team
-            captain={captain}
-            winner={i() + 1 === props.data.winnerTeamId}
-          />
-        )}
-      </For>
-    </div>
-    <div class='mt-2 flex items-center justify-between'>
-      <span class='flex items-center gap-4 text-secondary'>
-        <span class='inline-flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 py-2 pr-2 pl-2.5'>
-          <Users class='size-6' />
-          {` `}
-          <span class='font-bold'>{props.data.playerCount}</span>
-        </span>
-        <span class='inline-flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 py-2 pr-2 pl-2.5'>
-          <Swords class='size-6' />
-          {` `}
-          <span class='font-bold'>{props.data.matchCount}</span>
-        </span>
-      </span>
-      <A
-        class='inline-flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 py-2 pr-3 pl-2.5 text-secondary transition-colors hover:border-white/12 hover:bg-white/6 hover:text-primary'
-        href={`/tournaments/${props.data.id}`}
+  <A
+    aria-label={`View ${props.data.name} tournament details`}
+    class='group relative block overflow-hidden rounded-2xl transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+    href={`/tournaments/${props.data.id}`}
+  >
+    <div class='flex flex-col gap-5 rounded-2xl border border-white/6 bg-white/1 p-6 transition-all duration-300 group-hover:border-border-hover group-hover:bg-input group-hover:shadow-xl group-hover:shadow-black/20'>
+      <div class='flex min-w-0 flex-col gap-1'>
+        <h2 class='text-gray-12 truncate font-rubik text-lg font-black tracking-tight transition-colors group-hover:text-white'>
+          {props.data.name}
+        </h2>
+        <time
+          class='text-sm font-medium tracking-wide text-tertiary'
+          dateTime={new Date(props.data.date).toISOString()}
+        >
+          {formatReallyLongTime(props.data.date)}
+        </time>
+      </div>
+
+      <div
+        aria-label='Participating teams'
+        class='flex flex-col gap-2'
+        role='list'
       >
-        <span class='hidden font-rubik sm:block md:hidden 2xl:block'>
-          Go to Tournament
+        <For each={props.data.captains}>
+          {(captain, i) => (
+            <Team
+              captain={captain}
+              winner={i() + 1 === props.data.winnerTeamId}
+            />
+          )}
+        </For>
+      </div>
+
+      <div class='mt-auto flex items-center justify-between border-t border-white/6 pt-5'>
+        <div class='flex items-center gap-3'>
+          <div
+            aria-label={`${props.data.playerCount} players`}
+            class='flex items-center gap-1.5 text-sm text-tertiary'
+            title='Players'
+          >
+            <Users class='size-4 opacity-60' />
+            <span class='font-medium tabular-nums'>
+              {props.data.playerCount}
+            </span>
+          </div>
+          <div aria-hidden='true' class='h-3 w-px bg-white/8' />
+          <div
+            aria-label={`${props.data.matchCount} matches`}
+            class='flex items-center gap-1.5 text-sm text-tertiary'
+            title='Matches'
+          >
+            <Swords class='size-4 opacity-60' />
+            <span class='font-medium tabular-nums'>
+              {props.data.matchCount}
+            </span>
+          </div>
+        </div>
+
+        <span class='flex items-center gap-1.5 text-sm font-medium text-tertiary transition-colors group-hover:text-secondary'>
+          <span class='hidden sm:inline md:hidden xl:inline'>View</span>
+          <ArrowRight class='size-4 transition-transform duration-200' />
         </span>
-        <ArrowRight class='size-4' />
-      </A>
+      </div>
     </div>
-  </div>
+  </A>
 );
 
 const TournamentCardSkeleton = (props: { teamCount: number }) => (
-  <div class='mb-4 flex break-inside-avoid flex-col gap-4 rounded-xl border border-white/6 bg-white/3 p-7'>
+  <div class='mb-4 flex break-inside-avoid flex-col gap-5 overflow-hidden rounded-2xl border border-white/6 bg-white/1 p-6'>
     <div class='flex flex-col gap-2'>
-      <div class='h-7 w-48 animate-pulse rounded bg-white/10' />
-      <div class='h-5 w-32 animate-pulse rounded bg-white/6' />
+      <div class='h-6 w-40 animate-pulse rounded-lg bg-white/6' />
+      <div class='h-4 w-24 animate-pulse rounded bg-white/3' />
     </div>
-    <hr class='border-white/12' />
+
     <div class='flex flex-col gap-2'>
       <For each={Array.from({ length: props.teamCount })}>
         {() => (
-          <div class='flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 py-2 pr-3.5 pl-2'>
-            <div class='size-8 animate-pulse rounded bg-white/10' />
-            <div class='h-5 w-28 animate-pulse rounded bg-white/6' />
+          <div class='flex items-center gap-3 rounded-xl bg-white/2 px-3 py-2.5'>
+            <div class='size-8 animate-pulse rounded-lg bg-white/6' />
+            <div class='h-4 w-24 animate-pulse rounded bg-white/4' />
           </div>
         )}
       </For>
     </div>
-    <hr class='border-white/12' />
-    <div class='mt-2 flex items-center justify-between'>
-      <span class='flex items-center gap-4'>
-        <span class='inline-flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 py-2 pr-2 pl-2.5'>
-          <div class='size-6 animate-pulse rounded bg-white/10' />
-          <div class='h-5 w-6 animate-pulse rounded bg-white/6' />
-        </span>
-        <span class='inline-flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 py-2 pr-2 pl-2.5'>
-          <div class='size-6 animate-pulse rounded bg-white/10' />
-          <div class='h-5 w-6 animate-pulse rounded bg-white/6' />
-        </span>
-      </span>
-      <span class='inline-flex items-center gap-2 rounded-lg border border-white/6 bg-white/3 py-2 pr-2 pl-2.5'>
-        <div class='hidden h-5 w-28 animate-pulse rounded bg-white/6 sm:block md:hidden 2xl:block' />
-        <div class='size-6 animate-pulse rounded bg-white/10' />
-      </span>
+
+    <div class='mt-auto flex items-center justify-between border-t border-white/6 pt-5'>
+      <div class='flex items-center gap-3'>
+        <div class='h-4 w-8 animate-pulse rounded bg-white/4' />
+        <div class='h-3 w-px bg-white/8' />
+        <div class='h-4 w-8 animate-pulse rounded bg-white/4' />
+      </div>
+      <div class='h-4 w-4 animate-pulse rounded bg-white/4' />
     </div>
   </div>
 );
@@ -185,24 +212,27 @@ const TournamentCardSkeleton = (props: { teamCount: number }) => (
 const Team = (props: { captain: Player; winner?: boolean }) => (
   <div
     class={clsx(
-      `flex items-center justify-between gap-2 rounded-lg border border-white/6 py-2 pr-3.5 pl-2`,
-      props.winner ? `bg-amber-400/8` : `bg-white/3`,
+      `flex items-center gap-3 rounded-xl py-2.5 pr-4 pl-3`,
+      props.winner ? `bg-amber-500/5` : `bg-white/2`,
     )}
+    role='listitem'
   >
-    <span class='inline-flex items-center gap-2'>
+    <div class='shrink-0'>
       <img
-        class='size-8'
+        alt={`${props.captain.username}'s avatar`}
+        class='size-8 object-cover'
+        loading='lazy'
         src={`https://nmsr.nickac.dev/face/${props.captain.uuid}`}
       />
-      <span class='font-bold text-secondary'>
-        Team {props.captain.username}
-      </span>
+    </div>
+
+    <span class='flex-1 truncate text-sm font-semibold text-secondary'>
+      Team {props.captain.username}
     </span>
-    {props.winner && (
-      <span>
-        <Crown class='size-6 text-amber-400' />
-      </span>
-    )}
+
+    <Show when={props.winner}>
+      <Crown class='size-4 text-amber-400' />
+    </Show>
   </div>
 );
 

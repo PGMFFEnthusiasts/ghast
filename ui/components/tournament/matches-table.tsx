@@ -126,7 +126,7 @@ export const MatchesTable = (props: {
       <div class='mb-4 flex items-center gap-3'>
         <h2 class='text-xl font-bold'>Tournament Matches</h2>
       </div>
-      <div class='!ag-grid' data-ag-theme-mode='dark-blue' ref={gridRef} />
+      <div class='ag-grid!' data-ag-theme-mode='dark-blue' ref={gridRef} />
     </section>
   );
 };

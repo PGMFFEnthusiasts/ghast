@@ -2,7 +2,7 @@ import { A } from '@solidjs/router';
 import { toast } from 'solid-sonner';
 
 export const ServerFacts = () => (
-  <div class='not-prose mx-auto my-8 w-full max-w-sm border-1 border-black bg-white p-4 font-sans text-sm text-black'>
+  <div class='not-prose mx-auto my-8 w-full max-w-sm border border-black bg-white p-4 font-sans text-sm text-black'>
     <div class='mb-1 border-b-8 border-black pb-1 text-3xl font-extrabold'>
       Server Facts
     </div>

@@ -64,11 +64,12 @@ const colorCorrect = (
     : undefined;
   const nameLower = teamName.toLowerCase();
 
-  return resolvedColor ?? (
-    nameLower === `red` ? redColor
+  return (
+    resolvedColor ??
+    (nameLower === `red` ? redColor
     : nameLower === `blue` ? blueColor
     : teamOrdinal === 0 ? redColor
-    : blueColor
+    : blueColor)
   );
 };
 

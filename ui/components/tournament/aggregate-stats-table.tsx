@@ -52,7 +52,7 @@ const nameCellRenderer =
           class="aspect-square size-6"
           src="https://nmsr.nickac.dev/face/${params.data.uuid}"
         />${params.value}${isWinner ?
-          `<svg class="size-4 text-yellow-400 ml-auto shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294zM5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>`
+          `<svg class="size-4 text-yellow-400 ml-auto shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 20q-.425 0-.712-.288T5 19t.288-.712T6 18h12q.425 0 .713.288T19 19t-.288.713T18 20zm.7-3.5q-.725 0-1.287-.475t-.688-1.2l-1-6.35q-.05 0-.112.013T3.5 8.5q-.625 0-1.062-.437T2 7t.438-1.062T3.5 5.5t1.063.438T5 7q0 .175-.038.325t-.087.275L8 9l3.125-4.275q-.275-.2-.45-.525t-.175-.7q0-.625.438-1.063T12 2t1.063.438T13.5 3.5q0 .375-.175.7t-.45.525L16 9l3.125-1.4q-.05-.125-.088-.275T19 7q0-.625.438-1.063T20.5 5.5t1.063.438T22 7t-.437 1.063T20.5 8.5q-.05 0-.112-.012t-.113-.013l-1 6.35q-.125.725-.687 1.2T17.3 16.5zm0-2h10.6l.65-4.175l-1.15.5q-.65.275-1.325.1t-1.1-.75L12 6.9l-2.375 3.275q-.425.575-1.1.75t-1.325-.1l-1.15-.5zm5.3 0" fill="currentColor"/></svg>`
         : ``}
       </span>
     `;
@@ -251,7 +251,6 @@ export const AggregateStatsTable = (props: {
     const players = normalizedPlayers();
     if (grid) {
       grid.setGridOption(`rowData`, players);
-      grid.refreshCells({ force: true });
     }
   });
 
@@ -266,7 +265,7 @@ export const AggregateStatsTable = (props: {
   return (
     <section>
       <div class='mb-4 flex flex-wrap items-center gap-3'>
-        <h2 class='flex items-center gap-1.5 text-xl'>
+        <h2 class='flex items-center gap-1.5 text-xl font-bold'>
           <Select
             defaultValue={NORMALIZATION_OPTIONS[0]}
             disallowEmptySelection
@@ -282,7 +281,10 @@ export const AggregateStatsTable = (props: {
             optionValue='value'
             placement='top-start'
           >
-            <SelectTrigger class='text-xl' hideIcon>
+            <SelectTrigger
+              class='text-xl font-bold hover:cursor-pointer'
+              hideIcon
+            >
               <SelectValue<(typeof NORMALIZATION_OPTIONS)[0]>>
                 {(state) => state.selectedOption().label}
               </SelectValue>
@@ -301,7 +303,7 @@ export const AggregateStatsTable = (props: {
           <Csv />
         </Button>
       </div>
-      <div class='!ag-grid' data-ag-theme-mode='dark-blue' ref={gridRef} />
+      <div class='ag-grid!' data-ag-theme-mode='dark-blue' ref={gridRef} />
     </section>
   );
 };

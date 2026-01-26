@@ -36,6 +36,7 @@ export const PlayerShowcase = (props: {
       <Show fallback={skin} when={props.playerData}>
         <HoverCard
           content={<PlayerStatsHover playerData={props.playerData!} />}
+          glowColor={props.glowColor}
           onClick={cycleStatMode}
         >
           {skin}

@@ -7,6 +7,7 @@ import {
   eslintConfigRelative,
   eslintConfigSolid,
 } from '@hiddenability/opinionated-defaults/eslint';
+import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
 import { fileURLToPath } from 'node:url';
 
 export default eslintConfig([
@@ -20,4 +21,17 @@ export default eslintConfig([
   ...eslintConfigPrettier,
   ...eslintConfigRelative,
   ...eslintConfigSolid,
+  {
+    plugins: {
+      'better-tailwindcss': betterTailwindcss,
+    },
+    rules: {
+      'better-tailwindcss/enforce-canonical-classes': `warn`,
+    },
+    settings: {
+      'better-tailwindcss': {
+        entryPoint: `styles/main.css`,
+      },
+    },
+  },
 ]);

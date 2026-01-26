@@ -178,6 +178,7 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
                         />
                       : <></>
                     }
+                    glowColor={GOLD}
                     onClick={cycleStatMode}
                   >
                     <MinecraftSkin
@@ -304,7 +305,7 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
                       depth={300}
                       glowColor={BLUE}
                       height={400}
-                      label='All Tournament'
+                      label={`All Tournament #${index() + 1}`}
                       player={player}
                       playerData={findPlayerData(player.uuid)}
                       yaw={getAllTournamentYaw(index(), columns())}
@@ -451,7 +452,7 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
                           exportBlur
                           glowColor={BLUE}
                           height={400}
-                          label='All Tournament'
+                          label={`All Tournament #${index() + 1}`}
                           player={player}
                           skinSrc={exportAllTournamentSkins()![index()]}
                         />
