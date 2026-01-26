@@ -12,6 +12,7 @@ export {
 } from './noise-background';
 export { PlayerLabel } from './player-label';
 export { PlayerShowcase } from './player-showcase';
+export { cycleStatMode, PlayerStatsHover } from './player-stats-hover';
 export { Podium } from './podium';
 export {
   createResizeHandler,

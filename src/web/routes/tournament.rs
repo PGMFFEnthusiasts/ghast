@@ -1,6 +1,6 @@
 use crate::web::api::GhastApiState;
 use crate::web::types::{
-    TournamentAggregateStats, TournamentDetailedResponse, TournamentListApi,
+    PlayerIndexScores, TournamentAggregateStats, TournamentDetailedResponse, TournamentListApi,
     TournamentListResponse, TournamentMatchResponse, TournamentMvpResponse, TournamentPlayerInfo,
     TournamentPlayerWithStats, TournamentTeamResponse,
 };
@@ -20,30 +20,6 @@ fn make_player_info(
             .cloned()
             .flatten()
             .unwrap_or_else(|| String::from("Unknown")),
-    }
-}
-
-fn default_aggregate_stats(team_id: i32) -> TournamentAggregateStats {
-    TournamentAggregateStats {
-        assists: 0,
-        catches: 0,
-        damage_carrier: 0.0,
-        damage_dealt: 0.0,
-        damage_taken: 0.0,
-        deaths: 0,
-        defensive_interceptions: 0,
-        kills: 0,
-        killstreak: 0,
-        pass_interceptions: 0,
-        passes: 0,
-        passing_blocks: 0.0,
-        pickups: 0,
-        receive_blocks: 0.0,
-        strips: 0,
-        team: team_id,
-        throws: 0,
-        touchdown_passes: 0,
-        touchdowns: 0,
     }
 }
 
@@ -285,15 +261,14 @@ pub async fn get_tournament_by_id(
             let duration = match_duration_map.get(match_id).copied().unwrap_or(0);
             match_stats.iter().map(move |(uuid, stats)| (uuid, stats, duration))
         })
-        .fold(HashMap::new(), |acc, (uuid, stats, duration)| {
+        .fold(HashMap::new(), |mut acc, (uuid, stats, duration)| {
             let team_id = player_team_map.get(uuid).copied().unwrap_or(0);
             let (current_agg, count, time) = acc
                 .get(uuid)
                 .cloned()
-                .unwrap_or_else(|| (default_aggregate_stats(team_id), 0, 0));
-            let mut new_acc = acc;
-            new_acc.insert(*uuid, (add_stats(current_agg, stats), count + 1, time + duration));
-            new_acc
+                .unwrap_or_else(|| (TournamentAggregateStats { team: team_id, ..Default::default() }, 0, 0));
+            acc.insert(*uuid, (add_stats(current_agg, stats), count + 1, time + duration));
+            acc
         });
 
     let player_weighted: Vec<(Uuid, WeightedScores, u32)> = player_aggregates
@@ -325,28 +300,30 @@ pub async fn get_tournament_by_id(
         })
         .collect();
 
+    let player_index_map: HashMap<Uuid, &IndexScores> = player_indexes
+        .iter()
+        .map(|(uuid, idx)| (*uuid, idx))
+        .collect();
+
     let (award_map, _) = Award::PRIORITY_ORDER.iter().fold(
         (HashMap::with_capacity(6), HashSet::with_capacity(6)),
-        |(map, awarded), &award| match player_indexes
-            .iter()
-            .filter(|(uuid, _)| !awarded.contains(uuid))
-            .max_by(|a, b| award.score(&a.1).total_cmp(&award.score(&b.1)))
-            .map(|(uuid, _)| *uuid)
-        {
-            Some(uuid) => {
-                let mut new_map = map;
-                let mut new_awarded = awarded;
-                new_map.insert(award, uuid);
-                new_awarded.insert(uuid);
-                (new_map, new_awarded)
+        |(mut map, mut awarded), &award| {
+            if let Some(uuid) = player_indexes
+                .iter()
+                .filter(|(uuid, _)| !awarded.contains(uuid))
+                .max_by(|a, b| award.score(&a.1).total_cmp(&award.score(&b.1)))
+                .map(|(uuid, _)| *uuid)
+            {
+                map.insert(award, uuid);
+                awarded.insert(uuid);
             }
-            None => (map, awarded),
+            (map, awarded)
         },
     );
 
     let all_tournament: Vec<Uuid> = {
         let mut sorted: Vec<_> = player_indexes.iter().collect();
-        sorted.sort_by(|a, b| b.1.total.total_cmp(&a.1.total));
+        sorted.sort_unstable_by(|a, b| b.1.total.total_cmp(&a.1.total));
         sorted.into_iter().take(5).map(|(uuid, _)| *uuid).collect()
     };
 
@@ -388,7 +365,19 @@ pub async fn get_tournament_by_id(
                     let (stats, matches_played, time_played) = player_aggregates
                         .get(&p.player_uuid)
                         .map(|(agg, count, time)| (agg.clone(), *count, *time))
-                        .unwrap_or_else(|| (default_aggregate_stats(team.team_id), 0, 0));
+                        .unwrap_or_else(|| (TournamentAggregateStats { team: team.team_id, ..Default::default() }, 0, 0));
+
+                    let indexes = player_index_map
+                        .get(&p.player_uuid)
+                        .map(|idx| PlayerIndexScores {
+                            offense: idx.offense,
+                            passing: idx.passing,
+                            receiving: idx.receiving,
+                            defense: idx.defense,
+                            pvp: idx.pvp,
+                            total: idx.total,
+                        })
+                        .unwrap_or_default();
 
                     TournamentPlayerWithStats {
                         uuid: p.player_uuid.to_string(),
@@ -400,6 +389,7 @@ pub async fn get_tournament_by_id(
                         stats,
                         matches_played,
                         time_played,
+                        indexes,
                     }
                 })
                 .collect();

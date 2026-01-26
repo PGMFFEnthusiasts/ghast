@@ -282,7 +282,7 @@ export const AggregateStatsTable = (props: {
             optionValue='value'
             placement='top-start'
           >
-            <SelectTrigger class='text-xl'>
+            <SelectTrigger class='text-xl' hideIcon>
               <SelectValue<(typeof NORMALIZATION_OPTIONS)[0]>>
                 {(state) => state.selectedOption().label}
               </SelectValue>

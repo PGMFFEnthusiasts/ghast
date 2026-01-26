@@ -35,9 +35,19 @@ export type Player = {
 };
 
 export type PlayerData = Player & {
+  indexes: PlayerIndexScores;
   matchesPlayed: number;
   stats: Stats;
   timePlayed: number;
+};
+
+export type PlayerIndexScores = {
+  defense: number;
+  offense: number;
+  passing: number;
+  pvp: number;
+  receiving: number;
+  total: number;
 };
 
 export type PlayerStats = PlayerData[];

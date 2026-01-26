@@ -13,48 +13,49 @@ pub async fn get_matches(
     matches: HashMap<u32, MatchData>,
 ) -> Json<MatchApi> {
     let mut lock = state.username_resolver.lock().await;
-    let mut formed_matches = Vec::with_capacity(matches.len());
-    let mut all_players : HashSet<Uuid> = HashSet::new();
-    for (_match_id, data) in matches.iter() {
-        all_players.extend(&data.players);
-    }
-    let all_username_map = lock.resolve_batch(
-        Vec::from_iter(all_players.into_iter())
-    ).await;
-    for (id, data) in matches.clone().into_iter() {
-        let player_data = {
-            let mut player_data_vec: Vec<PlayerData> = Vec::new();
-            for player in data.players {
-                let username =
-                    all_username_map.get(
-                        &player
-                    ).cloned().flatten().unwrap_or(String::from("Unknown"));
-                player_data_vec.push(PlayerData {
-                    uuid: player,
-                    username
-                });
+    let all_players: HashSet<Uuid> = matches
+        .values()
+        .flat_map(|data| data.players.iter().copied())
+        .collect();
+    let all_username_map = lock
+        .resolve_batch(all_players.into_iter().collect())
+        .await;
+    let formed_matches = matches
+        .into_iter()
+        .map(|(id, data)| {
+            let player_data = data
+                .players
+                .iter()
+                .map(|player| PlayerData {
+                    uuid: *player,
+                    username: all_username_map
+                        .get(player)
+                        .cloned()
+                        .flatten()
+                        .unwrap_or_else(|| String::from("Unknown")),
+                })
+                .collect();
+
+            MatchResponse {
+                id,
+                data: PlayerlessMatchData {
+                    server: data.server,
+                    start_time: data.start_time,
+                    duration: data.duration,
+                    winner: data.winner,
+                    team_one_score: data.team_one_score,
+                    team_two_score: data.team_two_score,
+                    map: data.map,
+                    is_tourney: data.is_tourney,
+                    team_one_name: data.team_one_name,
+                    team_two_name: data.team_two_name,
+                    team_one_color: data.team_one_color,
+                    team_two_color: data.team_two_color,
+                },
+                players: player_data,
             }
-            player_data_vec
-        };
-        formed_matches.push(MatchResponse {
-            id,
-            data: PlayerlessMatchData {
-                server: data.server,
-                start_time: data.start_time,
-                duration: data.duration,
-                winner: data.winner,
-                team_one_score: data.team_one_score,
-                team_two_score: data.team_two_score,
-                map: data.map,
-                is_tourney: data.is_tourney,
-                team_one_name: data.team_one_name,
-                team_two_name: data.team_two_name,
-                team_one_color: data.team_one_color,
-                team_two_color: data.team_two_color,
-            },
-            players: player_data,
-        });
-    }
+        })
+        .collect();
 
     Json(formed_matches)
 }
@@ -68,15 +69,14 @@ pub async fn get_match_player_stats(
     let keys = matches.keys().cloned().collect::<Vec<_>>();
     let username_map = lock.resolve_batch(keys).await;
 
-    let match_player_stats: Vec<MatchPlayer> = matches
+    let match_player_stats = matches
         .into_iter()
         .map(|(uuid, stats)| MatchPlayer {
             username: username_map
                 .get(&uuid)
                 .cloned()
                 .flatten()
-                .unwrap_or(String::from("Unknown"))
-                .to_owned(),
+                .unwrap_or_else(|| String::from("Unknown")),
             uuid: uuid.to_string(),
             stats,
         })
@@ -91,6 +91,6 @@ pub async fn get_uber_data(match_id: u32, state: &State<GhastApiState>) -> Optio
     Some(UberApi {
         id: match_id,
         data,
-        players: players.unwrap_or(vec![]),
+        players: players.unwrap_or_default(),
     })
 }

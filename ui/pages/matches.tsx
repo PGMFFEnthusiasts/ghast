@@ -65,18 +65,14 @@ const playersCellRenderer = (params: { data: { players: Player[] } }) => {
     div.innerHTML = `No Players`;
     return div;
   }
-  for (let i = 0; i < Math.min(params.data.players.length, 216 / 24); i++) {
-    const player = params.data.players[i];
+  params.data.players.slice(0, Math.floor(216 / 24)).forEach((player) => {
     const img = document.createElement(`img`);
     img.setAttribute(`alt`, `${player.username}'s Head`);
     img.setAttribute(`title`, `${player.username}'s Head`);
     img.setAttribute(`class`, `size-6 shrink-0`);
-    img.setAttribute(
-      `src`,
-      `${`https://nmsr.nickac.dev/face/${player.uuid}?width=64`}`,
-    );
+    img.setAttribute(`src`, `https://nmsr.nickac.dev/face/${player.uuid}?width=64`);
     div.append(img);
-  }
+  });
   if (params.data.players.length > 9) {
     const len = params.data.players.length - 9;
     const span = document.createElement(`span`);

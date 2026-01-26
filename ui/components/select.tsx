@@ -1,7 +1,7 @@
 import type { ComponentProps, ValidComponent, VoidProps } from 'solid-js';
 
 import { Select as SelectPrimitive } from '@kobalte/core/select';
-import { splitProps } from 'solid-js';
+import { Show, splitProps } from 'solid-js';
 
 import { ChevronLeft } from '@/icons';
 import { cn } from '@/utils/cn';
@@ -38,28 +38,34 @@ export const SelectValue = <Options, T extends ValidComponent = `span`>(
 ) => <SelectPrimitive.Value {...props} />;
 
 export type SelectTriggerProps<T extends ValidComponent = `button`> =
-  ComponentProps<typeof SelectPrimitive.Trigger<T>>;
+  ComponentProps<typeof SelectPrimitive.Trigger<T>> & { hideIcon?: boolean };
 
 export const SelectTrigger = <T extends ValidComponent = `button`>(
   props: SelectTriggerProps<T>,
 ) => {
-  const [, rest] = splitProps(props as SelectTriggerProps, [
+  const [local, rest] = splitProps(props as SelectTriggerProps, [
     `class`,
     `children`,
+    `hideIcon`,
   ]);
 
   return (
     <SelectPrimitive.Trigger
       class={cn(
-        `group flex items-center justify-between gap-2 rounded-md border border-white/10 bg-[#242C39] px-2.5 py-1 text-white transition-colors outline-none hover:bg-[#2E3642]`,
-        props.class,
+        `group flex items-center rounded-md border border-white/10 bg-[#242C39] py-1 text-white transition-colors outline-none hover:bg-[#2E3642]`,
+        local.hideIcon ?
+          `justify-center px-2.5`
+        : `justify-between gap-2 pr-2 pl-2.5`,
+        local.class,
       )}
       {...rest}
     >
-      {props.children}
-      <SelectPrimitive.Icon class='size-4 opacity-70 transition-transform duration-200 group-data-[expanded]:rotate-90'>
-        <ChevronLeft class='size-4' />
-      </SelectPrimitive.Icon>
+      {local.children}
+      <Show when={!local.hideIcon}>
+        <SelectPrimitive.Icon class='size-4 opacity-70 transition-transform duration-200 group-data-expanded:rotate-90'>
+          <ChevronLeft class='size-4' />
+        </SelectPrimitive.Icon>
+      </Show>
     </SelectPrimitive.Trigger>
   );
 };

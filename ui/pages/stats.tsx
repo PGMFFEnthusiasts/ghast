@@ -57,16 +57,19 @@ const colorCorrect = (
   teamName: string,
   teamColor: number | undefined,
   teamOrdinal: number,
-) => {
-  if (typeof teamColor === `number`) {
-    const resolvedColor = teamColorMap[teamColor.toString()];
-    if (resolvedColor) return resolvedColor;
-  }
+): string => {
+  const resolvedColor =
+    typeof teamColor === `number` ?
+      teamColorMap[teamColor.toString()]
+    : undefined;
+  const nameLower = teamName.toLowerCase();
 
-  if (teamName.toLowerCase() === `red`) return redColor;
-  if (teamName.toLowerCase() === `blue`) return blueColor;
-
-  return teamOrdinal === 0 ? redColor : blueColor;
+  return resolvedColor ?? (
+    nameLower === `red` ? redColor
+    : nameLower === `blue` ? blueColor
+    : teamOrdinal === 0 ? redColor
+    : blueColor
+  );
 };
 
 const nameCellRenderer =

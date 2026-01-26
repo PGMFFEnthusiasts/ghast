@@ -46,6 +46,16 @@ pub struct TournamentPlayerInfo {
     pub username: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub struct PlayerIndexScores {
+    pub offense: f64,
+    pub passing: f64,
+    pub receiving: f64,
+    pub defense: f64,
+    pub pvp: f64,
+    pub total: f64,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TournamentPlayerWithStats {
@@ -54,9 +64,10 @@ pub struct TournamentPlayerWithStats {
     pub stats: TournamentAggregateStats,
     pub matches_played: u32,
     pub time_played: u32,
+    pub indexes: PlayerIndexScores,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct TournamentAggregateStats {
     pub assists: u32,
     pub catches: u32,

@@ -15,6 +15,7 @@ import type { MvpSkins } from '@/components/tournament';
 import type { TournamentDetailedData } from '@/utils/types';
 
 import { Button } from '@/components/button';
+import { HoverCard } from '@/components/hover-card';
 import { Layout } from '@/components/layouts/the-layout';
 import {
   AggregateStatsTable,
@@ -23,6 +24,7 @@ import {
   BLUE,
   BlueBackground,
   createResizeHandler,
+  cycleStatMode,
   getAllTournamentYaw,
   getColumnCount,
   GOLD,
@@ -34,6 +36,7 @@ import {
   nextFrame,
   PlayerLabel,
   PlayerShowcase,
+  PlayerStatsHover,
   Podium,
 } from '@/components/tournament';
 import { Image } from '@/icons';
@@ -82,6 +85,9 @@ const TournamentDetailPage = () => {
 const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
   const winnerTeam = () =>
     props.data.teams.find((t) => t.id === props.data.winnerTeamId);
+
+  const findPlayerData = (uuid: string) =>
+    props.data.teams.flatMap((t) => t.players).find((p) => p.uuid === uuid);
 
   const [columns, setColumns] = createSignal(getColumnCount());
   const [exportView, setExportView] = createSignal<`allTournament` | `mvp`>();
@@ -164,11 +170,22 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
             <div class='grid w-full grid-cols-1 gap-2 overflow-x-clip sm:grid-cols-2 md:grid-cols-3 md:grid-rows-2 md:overflow-visible'>
               <div class='z-1 flex items-end justify-center sm:col-span-2 sm:row-start-1 md:z-20 md:col-span-1 md:col-start-2 md:row-start-1'>
                 <div class='relative flex aspect-1/2 scale-80 items-center justify-center sm:scale-90'>
-                  <MinecraftSkin
-                    height={500}
-                    uuid={props.data.mvp.mvp.uuid}
-                    yaw={0}
-                  />
+                  <HoverCard
+                    content={
+                      findPlayerData(props.data.mvp.mvp.uuid) ?
+                        <PlayerStatsHover
+                          playerData={findPlayerData(props.data.mvp.mvp.uuid)!}
+                        />
+                      : <></>
+                    }
+                    onClick={cycleStatMode}
+                  >
+                    <MinecraftSkin
+                      height={500}
+                      uuid={props.data.mvp.mvp.uuid}
+                      yaw={0}
+                    />
+                  </HoverCard>
                   <Podium
                     color={GOLD}
                     depth={450}
@@ -190,6 +207,7 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
                   height={420}
                   label='Best Offensive Player'
                   player={props.data.mvp.opot}
+                  playerData={findPlayerData(props.data.mvp.opot.uuid)}
                   yaw={
                     columns() === 3 ? 20
                     : columns() === 2 ?
@@ -205,6 +223,7 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
                   height={420}
                   label='Best Defensive Player'
                   player={props.data.mvp.dpot}
+                  playerData={findPlayerData(props.data.mvp.dpot.uuid)}
                   yaw={
                     columns() === 3 ? -20
                     : columns() === 2 ?
@@ -213,15 +232,18 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
                   }
                 />
               </div>
-              <div class='z-3 flex scale-80 items-center justify-center sm:col-span-2 sm:row-start-3 sm:-mt-56 sm:scale-65 md:z-30 md:col-span-1 md:col-start-2 md:row-start-2 md:-mt-32 md:scale-75 lg:-mt-32 xl:scale-100'>
-                <PlayerShowcase
-                  depth={columns() === 2 ? 270 : undefined}
-                  glowColor='#EF4444'
-                  height={380}
-                  label='Best PvPer'
-                  player={props.data.mvp.oldl}
-                  yaw={columns() === 1 ? -20 : 0}
-                />
+              <div class='pointer-events-none z-3 flex scale-80 items-center justify-center sm:col-span-2 sm:row-start-3 sm:-mt-56 sm:scale-65 md:z-30 md:col-span-1 md:col-start-2 md:row-start-2 md:-mt-32 md:scale-75 lg:-mt-32 xl:scale-100'>
+                <div class='pointer-events-auto'>
+                  <PlayerShowcase
+                    depth={columns() === 2 ? 270 : undefined}
+                    glowColor='#EF4444'
+                    height={380}
+                    label='Best PvPer'
+                    player={props.data.mvp.oldl}
+                    playerData={findPlayerData(props.data.mvp.oldl.uuid)}
+                    yaw={columns() === 1 ? -20 : 0}
+                  />
+                </div>
               </div>
               <div class='z-4 flex scale-80 items-center justify-center sm:row-start-4 sm:-mt-56 sm:scale-65 md:z-20 md:row-start-2 md:-mt-32 md:scale-75 md:items-start md:justify-end md:p-8 lg:-mt-32 xl:scale-100'>
                 <PlayerShowcase
@@ -229,6 +251,7 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
                   height={380}
                   label='Best Passer'
                   player={props.data.mvp.passer}
+                  playerData={findPlayerData(props.data.mvp.passer.uuid)}
                   yaw={20}
                 />
               </div>
@@ -238,6 +261,7 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
                   height={380}
                   label='Best Receiver'
                   player={props.data.mvp.receiver}
+                  playerData={findPlayerData(props.data.mvp.receiver.uuid)}
                   yaw={
                     columns() === 3 ? -20
                     : columns() === 2 ?
@@ -282,6 +306,7 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
                       height={400}
                       label='All Tournament'
                       player={player}
+                      playerData={findPlayerData(player.uuid)}
                       yaw={getAllTournamentYaw(index(), columns())}
                     />
                   </div>
