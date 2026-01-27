@@ -70,7 +70,7 @@ const TournamentGrid = (props: { tournaments: TournamentListItem[] }) => {
     <div class='flex gap-4'>
       <For each={columns()}>
         {(col) => (
-          <div class='flex w-full flex-1 flex-col gap-4'>
+          <div class='flex w-full min-w-0 flex-1 flex-col gap-4'>
             <For each={col}>
               {(tournament) => <TournamentCard data={tournament} />}
             </For>

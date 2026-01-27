@@ -1,6 +1,5 @@
 import type { JSX } from 'solid-js';
 
-import { clsx } from 'clsx';
 import { createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 
@@ -16,7 +15,6 @@ export const HoverCard = (props: {
   const [isHovered, setIsHovered] = createSignal(false);
   const [position, setPosition] = createSignal({ x: 0, y: 0 });
   const [isWideEnough, setIsWideEnough] = createSignal(false);
-  const [isTouch, setIsTouch] = createSignal(false);
 
   const handleResize = () => {
     setIsWideEnough(globalThis.innerWidth >= MIN_WIDTH);
@@ -32,13 +30,10 @@ export const HoverCard = (props: {
   };
 
   const handlePointerEnter = (e: PointerEvent) => {
-    const touch = e.pointerType === `touch`;
-    setIsTouch(touch);
+    if (e.pointerType === `touch`) return;
     setPosition({ x: e.clientX, y: e.clientY });
     setIsHovered(true);
-    if (!touch) {
-      globalThis.addEventListener(`mousemove`, handleMouseMove);
-    }
+    globalThis.addEventListener(`mousemove`, handleMouseMove);
   };
 
   const handlePointerLeave = () => {
@@ -51,46 +46,23 @@ export const HoverCard = (props: {
     globalThis.removeEventListener(`resize`, handleResize);
   });
 
-  const cardStyle = () =>
-    isTouch() ?
-      {
-        left: `${position().x}px`,
-        top: `${position().y}px`,
-        transform: `translate(-50%, -33.33%)`,
-      }
-    : {
-        left: `${position().x + 16}px`,
-        top: `${position().y + 16}px`,
-      };
-
-  const handleWrapperClick = () => {
-    if (!isTouch()) {
-      props.onClick?.();
-    }
-  };
-
-  const handleCardClick = () => {
-    if (isTouch()) {
-      props.onClick?.();
-    }
-  };
+  const cardStyle = () => ({
+    left: `${position().x + 16}px`,
+    top: `${position().y + 16}px`,
+  });
 
   return (
     <div
       class={props.class}
-      onClick={handleWrapperClick}
+      onClick={() => props.onClick?.()}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
     >
       {props.children}
-      <Portal>
-        <Show when={isHovered() && isWideEnough()}>
+      <Show when={isHovered() && isWideEnough()}>
+        <Portal>
           <div
-            class={clsx(
-              `fixed z-9999 overflow-hidden rounded-lg border border-white/10 bg-[#1a1f2e]/95 p-3 shadow-xl backdrop-blur-md`,
-              !isTouch() && `pointer-events-none`,
-            )}
-            onClick={handleCardClick}
+            class='pointer-events-none fixed z-9999 overflow-hidden rounded-lg border border-white/10 bg-[#1a1f2e]/95 p-3 shadow-xl backdrop-blur-md'
             style={cardStyle()}
           >
             <span
@@ -99,8 +71,8 @@ export const HoverCard = (props: {
             />
             {props.content}
           </div>
-        </Show>
-      </Portal>
+        </Portal>
+      </Show>
     </div>
   );
 };
