@@ -229,6 +229,15 @@ export const AggregateStatsTable = (props: {
           headerName: `Pass Int`,
           valueFormatter: numericValueFormatter,
         },
+        {
+          field: `stats.damage_carrier`,
+          headerName: `DMG Carrier`,
+          valueFormatter: numericValueFormatter,
+        },
+        {
+          field: `uuid`,
+          headerName: `UUID`,
+        },
       ],
       defaultColDef: { initialWidth: 80 },
       domLayout: `autoHeight`,

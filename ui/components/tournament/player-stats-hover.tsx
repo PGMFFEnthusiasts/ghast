@@ -103,6 +103,7 @@ export const PlayerStatsHover = (props: { playerData: PlayerData }) => {
     { key: `receive_blocks`, label: `Catch (m)` },
     { key: `defensive_interceptions`, label: `Def Int` },
     { key: `pass_interceptions`, label: `Pass Int` },
+    { isDecimal: true, key: `damage_carrier`, label: `DMG Carrier` },
   ];
 
   return (
