@@ -65,6 +65,7 @@ pub struct TournamentPlayerWithStats {
     pub matches_played: u32,
     pub time_played: u32,
     pub indexes: PlayerIndexScores,
+    pub team_name: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]

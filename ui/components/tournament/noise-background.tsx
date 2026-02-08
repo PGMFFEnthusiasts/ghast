@@ -2,8 +2,10 @@
 import { clsx } from 'clsx';
 import { createSignal, onMount, Show } from 'solid-js';
 
+import { INDEX_COLORS } from '@/components/tournament/tournament-utils';
+
 export const BG_COLOR = `#0B101A`;
-export const GOLD = `#FFDD00`;
+export const GOLD = INDEX_COLORS.mvp;
 export const BLUE = `#60A5FA`;
 
 const hexToRgb = (hex: string) => {

@@ -24,6 +24,7 @@ import {
   getColumnCount,
   GOLD,
   GoldBackground,
+  INDEX_COLORS,
   MatchesTable,
   MinecraftSkin,
   PlayerLabel,
@@ -154,7 +155,7 @@ const TournamentDetailContent = (props: { data: TournamentStatsData }) => {
               <div class='z-2 scale-80 sm:row-start-2 sm:-mt-56 sm:scale-65 md:z-10 md:row-start-1 md:mt-0 md:scale-60 lg:scale-75 xl:scale-100'>
                 <PlayerShowcase
                   depth={450}
-                  glowColor='#A855F7'
+                  glowColor={INDEX_COLORS.offense}
                   height={420}
                   label='Best Offensive Player'
                   player={props.data.mvp.opot}
@@ -170,7 +171,7 @@ const TournamentDetailContent = (props: { data: TournamentStatsData }) => {
               <div class='z-3 scale-80 sm:row-start-2 sm:-mt-56 sm:scale-65 md:z-10 md:row-start-1 md:mt-0 md:scale-60 lg:scale-75 xl:scale-100'>
                 <PlayerShowcase
                   depth={450}
-                  glowColor='#22C55E'
+                  glowColor={INDEX_COLORS.defense}
                   height={420}
                   label='Best Defensive Player'
                   player={props.data.mvp.dpot}
@@ -187,7 +188,7 @@ const TournamentDetailContent = (props: { data: TournamentStatsData }) => {
                 <div class='pointer-events-auto'>
                   <PlayerShowcase
                     depth={columns() === 2 ? 270 : undefined}
-                    glowColor='#EF4444'
+                    glowColor={INDEX_COLORS.pvp}
                     height={380}
                     label='Best PvPer'
                     player={props.data.mvp.oldl}
@@ -198,7 +199,7 @@ const TournamentDetailContent = (props: { data: TournamentStatsData }) => {
               </div>
               <div class='z-4 flex scale-80 items-center justify-center sm:row-start-4 sm:-mt-56 sm:scale-65 md:z-20 md:row-start-2 md:-mt-32 md:scale-75 md:items-start md:justify-end md:p-8 lg:-mt-32 xl:scale-100'>
                 <PlayerShowcase
-                  glowColor='#3B82F6'
+                  glowColor={INDEX_COLORS.passing}
                   height={380}
                   label='Best Passer'
                   player={props.data.mvp.passer}
@@ -208,7 +209,7 @@ const TournamentDetailContent = (props: { data: TournamentStatsData }) => {
               </div>
               <div class='z-5 flex scale-80 items-center justify-center sm:row-start-4 sm:-mt-56 sm:scale-65 md:z-20 md:row-start-2 md:-mt-32 md:scale-75 md:items-start md:justify-start md:p-8 lg:-mt-32 xl:scale-100'>
                 <PlayerShowcase
-                  glowColor='#F97316'
+                  glowColor={INDEX_COLORS.receiving}
                   height={380}
                   label='Best Receiver'
                   player={props.data.mvp.receiver}

@@ -1,5 +1,6 @@
 import { createSignal, For } from 'solid-js';
 
+import { INDEX_COLORS } from '@/components/tournament/tournament-utils';
 import type { PlayerData, Stats } from '@/utils/types';
 
 export type StatMode = `perMatch` | `perMinute` | `total`;
@@ -76,15 +77,6 @@ export const PlayerStatsHover = (props: { playerData: PlayerData }) => {
   const stats = () => props.playerData.stats;
   const modeLabel = () => STAT_MODES.find((m) => m.value === mode())?.label;
 
-  const indexColors = {
-    defensive: `#22C55E`,
-    mvp: `#FFDD00`,
-    offensive: `#A855F7`,
-    passer: `#3B82F6`,
-    pvp: `#EF4444`,
-    receiver: `#F97316`,
-  };
-
   const statRows: { isDecimal?: boolean; key: keyof Stats; label: string }[] = [
     { key: `kills`, label: `Kills` },
     { key: `deaths`, label: `Deaths` },
@@ -107,24 +99,31 @@ export const PlayerStatsHover = (props: { playerData: PlayerData }) => {
   ];
 
   return (
-    <div class='relative flex min-w-[280px] flex-col gap-3 text-sm'>
-      <div class='absolute top-0 right-0 flex flex-col items-end'>
-        <span class='rounded bg-white/10 px-1.5 py-0.5 text-xs text-white/70'>
-          {modeLabel()}
-        </span>
-        <span class='mt-0.5 text-[10px] text-white/25'>click to cycle</span>
-      </div>
-      <div class='flex items-center gap-2 border-b border-white/10 pb-2'>
-        <img
-          class='size-8 rounded'
-          src={`https://nmsr.nickac.dev/face/${props.playerData.uuid}`}
-        />
-        <div>
-          <div class='font-bold'>{props.playerData.username}</div>
-          <div class='text-xs text-white/50'>
-            {props.playerData.matchesPlayed} matches •{` `}
-            {Math.floor(props.playerData.timePlayed / 60)}m played
+    <div class='flex w-[320px] flex-col gap-3 text-sm'>
+      <div class='flex items-start justify-between gap-3 border-b border-white/10 pb-2'>
+        <div class='flex min-w-0 items-center gap-2'>
+          <img
+            class='size-8 shrink-0 rounded'
+            src={`https://nmsr.nickac.dev/face/${props.playerData.uuid}`}
+          />
+          <div class='min-w-0'>
+            <div class='flex items-baseline gap-1 font-bold'>
+              <span class='shrink-0'>{props.playerData.username}</span>
+              <span class='truncate font-normal text-white/40'>
+                | {props.playerData.teamName}
+              </span>
+            </div>
+            <div class='text-xs text-white/50'>
+              {props.playerData.matchesPlayed} matches •{` `}
+              {Math.floor(props.playerData.timePlayed / 60)}m played
+            </div>
           </div>
+        </div>
+        <div class='flex shrink-0 flex-col items-end'>
+          <span class='rounded bg-white/10 px-1.5 py-0.5 text-xs text-white/70'>
+            {modeLabel()}
+          </span>
+          <span class='mt-0.5 text-[10px] text-white/25'>click to cycle</span>
         </div>
       </div>
 
@@ -149,28 +148,32 @@ export const PlayerStatsHover = (props: { playerData: PlayerData }) => {
         </div>
         <div class='flex flex-col gap-1'>
           <IndexRow
-            color={indexColors.mvp}
+            color={INDEX_COLORS.mvp}
             label='General'
             value={indexes().total}
           />
           <IndexRow
-            color={indexColors.offensive}
+            color={INDEX_COLORS.offense}
             label='Offensive'
             value={indexes().offense}
           />
           <IndexRow
-            color={indexColors.defensive}
+            color={INDEX_COLORS.defense}
             label='Defensive'
             value={indexes().defense}
           />
-          <IndexRow color={indexColors.pvp} label='PvP' value={indexes().pvp} />
           <IndexRow
-            color={indexColors.passer}
+            color={INDEX_COLORS.pvp}
+            label='PvP'
+            value={indexes().pvp}
+          />
+          <IndexRow
+            color={INDEX_COLORS.passing}
             label='Passing'
             value={indexes().passing}
           />
           <IndexRow
-            color={indexColors.receiver}
+            color={INDEX_COLORS.receiving}
             label='Receiving'
             value={indexes().receiving}
           />

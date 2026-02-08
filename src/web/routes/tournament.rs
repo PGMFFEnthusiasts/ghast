@@ -314,6 +314,7 @@ fn generate_team_response(
         .iter()
         .map(|team| {
             let captain = make_player_info(&team.captain_uuid, username_map);
+            let team_name = format!("Team {}", captain.username);
 
             let players: Vec<TournamentPlayerWithStats> = team_players
                 .iter()
@@ -350,6 +351,7 @@ fn generate_team_response(
                         matches_played,
                         time_played,
                         indexes,
+                        team_name: team_name.clone(),
                     }
                 })
                 .collect();

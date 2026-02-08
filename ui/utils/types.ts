@@ -38,6 +38,7 @@ export type PlayerData = Player & {
   indexes: PlayerIndexScores;
   matchesPlayed: number;
   stats: Stats;
+  teamName: string;
   timePlayed: number;
 };
 

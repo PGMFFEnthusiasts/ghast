@@ -23,21 +23,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/select';
+import { INDEX_COLORS } from '@/components/tournament/tournament-utils';
 import { Csv } from '@/icons';
 import { divHtml as html } from '@/utils';
 import { gridTheme } from '@/utils/grid';
 
 const TEAM_COLORS = [
   `text-red-400`,
-  `text-blue-400`,
-  `text-green-400`,
   `text-yellow-400`,
+  `text-green-400`,
+  `text-blue-400`,
   `text-purple-400`,
   `text-orange-400`,
 ];
 
 const getTeamColor = (teamIndex: number) =>
-  TEAM_COLORS[teamIndex % TEAM_COLORS.length];
+  TEAM_COLORS[(teamIndex - 1) % TEAM_COLORS.length];
 
 const nameCellRenderer =
   (winnerTeamId: number | undefined) =>
@@ -67,6 +68,11 @@ const teamCellRenderer =
       >Team ${team?.captain.username ?? teamId}</span
     >`;
   };
+
+const indexCellRenderer = (color: string) => (params: { value: number }) =>
+  html`<span style="color: ${color}">
+    ${typeof params.value === `number` ? params.value.toFixed(2) : `0.00`}
+  </span>`;
 
 const EXCLUDED_STATS_KEYS = new Set<keyof Stats>([`killstreak`, `team`]);
 
@@ -233,6 +239,42 @@ export const AggregateStatsTable = (props: {
           field: `stats.damage_carrier`,
           headerName: `DMG Carrier`,
           valueFormatter: numericValueFormatter,
+        },
+        {
+          cellRenderer: indexCellRenderer(INDEX_COLORS.mvp),
+          field: `indexes.total`,
+          headerName: `MVP`,
+          minWidth: 100,
+        },
+        {
+          cellRenderer: indexCellRenderer(INDEX_COLORS.offense),
+          field: `indexes.offense`,
+          headerName: `Offensive`,
+          minWidth: 100,
+        },
+        {
+          cellRenderer: indexCellRenderer(INDEX_COLORS.defense),
+          field: `indexes.defense`,
+          headerName: `Defensive`,
+          minWidth: 100,
+        },
+        {
+          cellRenderer: indexCellRenderer(INDEX_COLORS.pvp),
+          field: `indexes.pvp`,
+          headerName: `PvP`,
+          minWidth: 100,
+        },
+        {
+          cellRenderer: indexCellRenderer(INDEX_COLORS.passing),
+          field: `indexes.passing`,
+          headerName: `Passing`,
+          minWidth: 100,
+        },
+        {
+          cellRenderer: indexCellRenderer(INDEX_COLORS.receiving),
+          field: `indexes.receiving`,
+          headerName: `Receiving`,
+          minWidth: 100,
         },
         {
           field: `uuid`,

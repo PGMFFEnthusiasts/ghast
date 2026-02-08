@@ -17,4 +17,5 @@ export {
   createResizeHandler,
   getAllTournamentYaw,
   getColumnCount,
+  INDEX_COLORS,
 } from './tournament-utils';
