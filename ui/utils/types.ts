@@ -83,7 +83,18 @@ export type TournamentData = {
   winnerTeamId: number;
 };
 
-export type TournamentDetailedData = {
+export type TournamentMatchData = {
+  duration: number;
+  matchId: number;
+  server: string;
+  startTime: number;
+  teamOneId: number;
+  teamOneScore: number;
+  teamTwoId: number;
+  teamTwoScore: number;
+};
+
+export type TournamentStatsData = {
   allTournament: Player[] & { length: 5 };
   date: number;
   matches: TournamentMatchData[];
@@ -98,17 +109,6 @@ export type TournamentDetailedData = {
   name: string;
   teams: TournamentTeam[];
   winnerTeamId: number;
-};
-
-export type TournamentMatchData = {
-  duration: number;
-  matchId: number;
-  server: string;
-  startTime: number;
-  teamOneId: number;
-  teamOneScore: number;
-  teamTwoId: number;
-  teamTwoScore: number;
 };
 
 export type TournamentTeam = {

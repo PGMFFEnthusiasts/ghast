@@ -1,5 +1,4 @@
 import { useParams } from '@solidjs/router';
-import { toPng } from 'html-to-image';
 import {
   createResource,
   createSignal,
@@ -9,18 +8,14 @@ import {
   Show,
   Suspense,
 } from 'solid-js';
-import { Portal } from 'solid-js/web';
 
-import type { MvpSkins } from '@/components/tournament';
-import type { TournamentDetailedData } from '@/utils/types';
+import type { TournamentStatsData } from '@/utils/types';
 
-import { Button } from '@/components/button';
 import { HoverCard } from '@/components/hover-card';
 import { Layout } from '@/components/layouts/the-layout';
 import {
   AggregateStatsTable,
   AwardsSection,
-  BG_COLOR,
   BLUE,
   BlueBackground,
   createResizeHandler,
@@ -29,27 +24,23 @@ import {
   getColumnCount,
   GOLD,
   GoldBackground,
-  loadAllTournamentSkins,
-  loadMvpSkins,
   MatchesTable,
   MinecraftSkin,
-  nextFrame,
   PlayerLabel,
   PlayerShowcase,
   PlayerStatsHover,
   Podium,
 } from '@/components/tournament';
-import { Image } from '@/icons';
 import { formatReallyLongTime } from '@/utils';
 
 const getData = async (
   id: string,
-): Promise<TournamentDetailedData | undefined> => {
+): Promise<TournamentStatsData | undefined> => {
   const apiRoot =
     import.meta.env.VITE_API_ROOT ?? `https://tombrady.fireballs.me/api/`;
   const res = await fetch(new URL(`tournaments/${id}`, apiRoot));
   return res.status === 200 ?
-      ((await res.json()) as TournamentDetailedData)
+      ((await res.json()) as TournamentStatsData)
     : undefined;
 };
 
@@ -82,7 +73,7 @@ const TournamentDetailPage = () => {
   );
 };
 
-const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
+const TournamentDetailContent = (props: { data: TournamentStatsData }) => {
   const winnerTeam = () =>
     props.data.teams.find((t) => t.id === props.data.winnerTeamId);
 
@@ -90,42 +81,6 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
     props.data.teams.flatMap((t) => t.players).find((p) => p.uuid === uuid);
 
   const [columns, setColumns] = createSignal(getColumnCount());
-  const [exportView, setExportView] = createSignal<`allTournament` | `mvp`>();
-  const [exportMvpSkins, setExportMvpSkins] = createSignal<MvpSkins>();
-  const [exportAllTournamentSkins, setExportAllTournamentSkins] =
-    createSignal<string[]>();
-  let exportRef: HTMLDivElement | undefined;
-
-  const captureExport = async (filename: string) => {
-    await nextFrame();
-    await nextFrame();
-    if (!exportRef) return;
-
-    const dataUrl = await toPng(exportRef, {
-      backgroundColor: BG_COLOR,
-      pixelRatio: 3,
-    });
-    setExportView(undefined);
-
-    const link = document.createElement(`a`);
-    link.download = `${filename}.png`;
-    link.href = dataUrl;
-    link.click();
-  };
-
-  const exportMvp = async () => {
-    const skins = await loadMvpSkins(props.data.mvp);
-    setExportMvpSkins(skins);
-    setExportView(`mvp`);
-    void captureExport(`${props.data.name}-mvp`);
-  };
-
-  const exportAllTournament = async () => {
-    const skins = await loadAllTournamentSkins(props.data.allTournament);
-    setExportAllTournamentSkins(skins);
-    setExportView(`allTournament`);
-    void captureExport(`${props.data.name}-all-tournament`);
-  };
 
   onMount(() => {
     const handleResize = createResizeHandler(setColumns);
@@ -149,11 +104,6 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
       <hr />
       <main class='flex w-full flex-col'>
         <AwardsSection>
-          <div class='flex justify-end pb-2'>
-            <Button aria-label='Export MVP as image' onClick={exportMvp}>
-              <Image class='size-5' />
-            </Button>
-          </div>
           <div class='relative isolate'>
             <GoldBackground />
             <div class='pointer-events-none absolute inset-x-0 -top-4 z-0 flex items-start justify-center'>
@@ -276,14 +226,6 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
         </AwardsSection>
 
         <AwardsSection class='mt-72'>
-          <div class='flex justify-end pb-2'>
-            <Button
-              aria-label='Export All Tournament as image'
-              onClick={exportAllTournament}
-            >
-              <Image class='size-5' />
-            </Button>
-          </div>
           <div class='relative isolate'>
             <BlueBackground />
             <h1 class='pointer-events-none absolute inset-x-0 top-0 -z-10 -translate-y-1/2 text-center font-rubik text-4xl leading-none font-black text-transparent select-none sm:text-6xl md:text-8xl lg:text-9xl xl:text-[144px] 2xl:text-[180px]'>
@@ -327,144 +269,6 @@ const TournamentDetailContent = (props: { data: TournamentDetailedData }) => {
 
         <MatchesTable matches={props.data.matches} teams={props.data.teams} />
       </main>
-
-      <Portal>
-        <Show when={exportView()}>
-          <div class='fixed top-0 left-[-9999px] w-[1200px] bg-[#0B101A]'>
-            <Show when={exportView() === `mvp` && exportMvpSkins()}>
-              <div
-                class='relative isolate h-[1050px] px-16 pt-16 pb-32'
-                ref={exportRef}
-              >
-                <GoldBackground exportMode noiseOpacity='opacity-30' />
-                <div class='pointer-events-none absolute inset-x-0 top-0 z-0 flex items-start justify-center'>
-                  <h1 class='inline-block bg-linear-to-br from-[#FFDD00] to-[#FFDD55] bg-clip-text font-rubik text-[280px] font-black text-transparent select-none'>
-                    MVP
-                  </h1>
-                  <h1
-                    aria-hidden='true'
-                    class='absolute top-0 left-1/2 -z-10 -translate-x-1/2 translate-y-3 font-rubik text-[280px] font-black text-[#44474E] select-none'
-                  >
-                    MVP
-                  </h1>
-                </div>
-                <div class='-mb-40 grid w-full grid-cols-3 grid-rows-2 gap-2'>
-                  <div class='z-10 scale-90'>
-                    <PlayerShowcase
-                      depth={450}
-                      exportBlur
-                      glowColor='#A855F7'
-                      height={420}
-                      label='Best Offensive Player'
-                      player={props.data.mvp.opot}
-                      skinSrc={exportMvpSkins()!.opot}
-                    />
-                  </div>
-                  <div class='z-20 flex items-end justify-center'>
-                    <div class='relative flex aspect-1/2 items-center justify-center'>
-                      <MinecraftSkin height={500} src={exportMvpSkins()!.mvp} />
-                      <Podium
-                        color={GOLD}
-                        depth={450}
-                        id='mvp-center-export'
-                        offsetY='-translate-y-32'
-                      />
-                      <PlayerLabel
-                        class='bottom-30'
-                        exportBlur
-                        glowColor={GOLD}
-                        label='Overall MVP'
-                        username={props.data.mvp.mvp.username}
-                      />
-                    </div>
-                  </div>
-                  <div class='z-10 scale-90'>
-                    <PlayerShowcase
-                      depth={450}
-                      exportBlur
-                      glowColor='#22C55E'
-                      height={420}
-                      label='Best Defensive Player'
-                      player={props.data.mvp.dpot}
-                      skinSrc={exportMvpSkins()!.dpot}
-                    />
-                  </div>
-                  <div class='z-20 -mt-48 flex scale-80 items-start justify-end p-8'>
-                    <PlayerShowcase
-                      exportBlur
-                      glowColor='#3B82F6'
-                      height={380}
-                      label='Best Passer'
-                      player={props.data.mvp.passer}
-                      skinSrc={exportMvpSkins()!.passer}
-                    />
-                  </div>
-                  <div class='z-30 -mt-48 flex scale-80 items-center justify-center'>
-                    <PlayerShowcase
-                      exportBlur
-                      glowColor='#EF4444'
-                      height={380}
-                      label='Best PvPer'
-                      player={props.data.mvp.oldl}
-                      skinSrc={exportMvpSkins()!.oldl}
-                    />
-                  </div>
-                  <div class='z-20 -mt-48 flex scale-80 items-start justify-start p-8'>
-                    <PlayerShowcase
-                      exportBlur
-                      glowColor='#F97316'
-                      height={380}
-                      label='Best Receiver'
-                      player={props.data.mvp.receiver}
-                      skinSrc={exportMvpSkins()!.receiver}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Show>
-            <Show
-              when={
-                exportView() === `allTournament` && exportAllTournamentSkins()
-              }
-            >
-              <div
-                class='relative isolate overflow-hidden px-16 pt-28 pb-80'
-                ref={exportRef}
-              >
-                <BlueBackground exportMode noiseOpacity='opacity-50' />
-                <h1 class='pointer-events-none absolute inset-x-0 top-4 -z-10 text-center font-rubik text-[140px] leading-none font-black text-transparent select-none'>
-                  <span class='bg-linear-to-br from-[#60A5FA] to-[#93C5FD] bg-clip-text'>
-                    ALL TOURNAMENT
-                  </span>
-                </h1>
-                <h1
-                  aria-hidden='true'
-                  class='pointer-events-none absolute inset-x-0 top-4 -z-20 translate-y-2 text-center font-rubik text-[140px] leading-none font-black text-[#44474E] select-none'
-                >
-                  ALL TOURNAMENT
-                </h1>
-                <div class='flex w-full flex-wrap justify-center gap-x-6'>
-                  <For each={props.data.allTournament}>
-                    {(player, index) => (
-                      <div class='-my-10 flex w-[calc(33.333%-1rem)] scale-90 items-center justify-center'>
-                        <PlayerShowcase
-                          depth={300}
-                          exportBlur
-                          glowColor={BLUE}
-                          height={400}
-                          label={`All Tournament #${index() + 1}`}
-                          player={player}
-                          skinSrc={exportAllTournamentSkins()![index()]}
-                        />
-                      </div>
-                    )}
-                  </For>
-                </div>
-              </div>
-            </Show>
-          </div>
-        </Show>
-      </Portal>
     </Layout>
   );
 };

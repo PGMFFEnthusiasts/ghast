@@ -3,7 +3,6 @@ export { AwardsSection } from './awards-section';
 export { MatchesTable } from './matches-table';
 export { fetchSkinAsDataUrl, MinecraftSkin, skinUrl } from './minecraft-skin';
 export {
-  BG_COLOR,
   BLUE,
   BlueBackground,
   GOLD,
@@ -18,8 +17,4 @@ export {
   createResizeHandler,
   getAllTournamentYaw,
   getColumnCount,
-  loadAllTournamentSkins,
-  loadMvpSkins,
-  nextFrame,
 } from './tournament-utils';
-export type { MvpSkins } from './tournament-utils';
