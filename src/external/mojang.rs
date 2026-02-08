@@ -12,7 +12,7 @@ impl MojangApi {
     const UUID_TO_USERNAME: &'static str = "/minecraft/profile/lookup";
 
     pub fn new() -> Self {
-        MojangApi {
+        Self {
             client: Client::builder().build().unwrap(),
         }
     }

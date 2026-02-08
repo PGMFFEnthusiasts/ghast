@@ -12,14 +12,14 @@ pub async fn get_matches(
     state: &State<GhastApiState>,
     matches: HashMap<u32, MatchData>,
 ) -> Json<MatchApi> {
-    let mut lock = state.username_resolver.lock().await;
     let all_players: HashSet<Uuid> = matches
         .values()
         .flat_map(|data| data.players.iter().copied())
         .collect();
-    let all_username_map = lock
-        .resolve_batch(all_players.into_iter().collect())
-        .await;
+    let all_username_map = {
+        let lock = state.username_resolver.lock().await;
+        lock.resolve_batch(all_players.into_iter().collect()).await
+    };
     let formed_matches = matches
         .into_iter()
         .map(|(id, data)| {
@@ -65,9 +65,11 @@ pub async fn get_match_player_stats(
     state: &State<GhastApiState>,
 ) -> Option<MatchPlayerApi> {
     let matches = state.database.get_player_match_stats(match_id).await?;
-    let mut lock = state.username_resolver.lock().await;
-    let keys = matches.keys().cloned().collect::<Vec<_>>();
-    let username_map = lock.resolve_batch(keys).await;
+    let keys = matches.keys().copied().collect::<Vec<_>>();
+    let username_map = {
+        let lock = state.username_resolver.lock().await;
+        lock.resolve_batch(keys).await
+    };
 
     let match_player_stats = matches
         .into_iter()

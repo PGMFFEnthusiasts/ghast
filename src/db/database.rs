@@ -23,7 +23,7 @@ impl Database {
             .connect(format!("postgres://{database_path}").as_str())
             .await
             .unwrap();
-        Database {
+        Self {
             connection_pool: pool,
         }
     }
@@ -56,8 +56,12 @@ impl Database {
                     team_two_score: record.team_two_score as u32,
                     map: record.map,
                     is_tourney: record.is_tourney,
-                    team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
-                    team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
+                    team_one_name: record
+                        .team_one_name
+                        .unwrap_or_else(|| String::from("Unknown")),
+                    team_two_name: record
+                        .team_two_name
+                        .unwrap_or_else(|| String::from("Unknown")),
                     team_one_color: record.team_one_color.map(|n| n as u32),
                     team_two_color: record.team_two_color.map(|n| n as u32),
                 })
@@ -98,15 +102,19 @@ impl Database {
                         team_two_score: record.team_two_score as u32,
                         map: record.map,
                         is_tourney: record.is_tourney,
-                        team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
-                        team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
+                        team_one_name: record
+                            .team_one_name
+                            .unwrap_or_else(|| String::from("Unknown")),
+                        team_two_name: record
+                            .team_two_name
+                            .unwrap_or_else(|| String::from("Unknown")),
                         team_one_color: record.team_one_color.map(|n| n as u32),
                         team_two_color: record.team_two_color.map(|n| n as u32),
                         players: record
                             .players
                             .unwrap_or(Vec::new())
                             .into_iter()
-                            .map(Database::parse_uuid)
+                            .map(Self::parse_uuid)
                             .collect(),
                     };
                     match_data.insert(record.r#match as u32, datum);
@@ -157,15 +165,19 @@ impl Database {
                         team_two_score: record.team_two_score as u32,
                         map: record.map,
                         is_tourney: record.is_tourney,
-                        team_one_name: record.team_one_name.unwrap_or(String::from("Unknown")),
-                        team_two_name: record.team_two_name.unwrap_or(String::from("Unknown")),
+                        team_one_name: record
+                            .team_one_name
+                            .unwrap_or_else(|| String::from("Unknown")),
+                        team_two_name: record
+                            .team_two_name
+                            .unwrap_or_else(|| String::from("Unknown")),
                         team_one_color: record.team_one_color.map(|n| n as u32),
                         team_two_color: record.team_two_color.map(|n| n as u32),
                         players: record
                             .players
                             .unwrap_or(Vec::new())
                             .into_iter()
-                            .map(Database::parse_uuid)
+                            .map(Self::parse_uuid)
                             .collect(),
                     };
                     match_data.insert(record.r#match as u32, datum);
@@ -241,7 +253,7 @@ impl Database {
                 warn!("Error retrieving match player stats {e:?}");
                 return None;
             }
-        };
+        }
         Some(player_stats)
     }
 

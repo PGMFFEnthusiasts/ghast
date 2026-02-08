@@ -18,7 +18,7 @@ impl<K: Hash + Eq + Send + Sync + 'static + Clone, V: Clone + Send + Sync + 'sta
     LoadingCacheDataAccessor<K, V>
 {
     #[allow(dead_code)]
-    pub async fn get_batch(&mut self, keys: Vec<K>) -> HashMap<K, Option<V>> {
+    pub async fn get_batch(&self, keys: Vec<K>) -> HashMap<K, Option<V>> {
         let mut set = JoinSet::new();
 
         for key in keys {
@@ -26,17 +26,15 @@ impl<K: Hash + Eq + Send + Sync + 'static + Clone, V: Clone + Send + Sync + 'sta
             let cache = self.cache.clone();
             let future = async move {
                 let value = cache.get(&key).await;
-                let value = match value {
-                    Some(value) => Some(value),
-                    None => {
-                        let value = (loader)(key.clone()).await;
-                        match value {
-                            Some(value) => {
-                                cache.insert(key.clone(), value.clone()).await;
-                                Some(value)
-                            }
-                            None => None,
-                        }
+                let value = if let Some(value) = value {
+                    Some(value)
+                } else {
+                    let value = (loader)(key.clone()).await;
+                    if let Some(value) = value {
+                        cache.insert(key.clone(), value.clone()).await;
+                        Some(value)
+                    } else {
+                        None
                     }
                 };
                 (key.clone(), value)

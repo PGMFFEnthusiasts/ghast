@@ -49,7 +49,7 @@ pub async fn get_player_stats_for_match(
 ) -> Option<Json<MatchPlayerApi>> {
     if let Some(v) = get_match_player_stats(match_id, state).await {
         return Some(Json(v));
-    };
+    }
 
     None
 }

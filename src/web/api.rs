@@ -34,7 +34,7 @@ pub fn rocket(state: GhastApiState) -> Rocket<Build> {
     } else {
         Config::release_default()
     })
-    .merge::<(&str, IpAddr)>(("address", Ipv4Addr::new(0, 0, 0, 0).into()))
+    .merge::<(&str, IpAddr)>(("address", Ipv4Addr::UNSPECIFIED.into()))
     .merge(("port", http_port))
     .extract()
     .unwrap();

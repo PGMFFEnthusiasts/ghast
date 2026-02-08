@@ -1,3 +1,5 @@
+use crate::db::model::player_match_stats::PlayerMatchStats;
+use crate::db::model::tournament::{TournamentMatchMapping, TournamentTeam, TournamentTeamPlayer};
 use crate::web::api::GhastApiState;
 use crate::web::types::{
     PlayerIndexScores, TournamentAggregateStats, TournamentDetailedResponse, TournamentListApi,
@@ -23,10 +25,7 @@ fn make_player_info(
     }
 }
 
-fn add_stats(
-    agg: TournamentAggregateStats,
-    stats: &crate::db::model::player_match_stats::PlayerMatchStats,
-) -> TournamentAggregateStats {
+fn add_stats(agg: &TournamentAggregateStats, stats: &PlayerMatchStats) -> TournamentAggregateStats {
     TournamentAggregateStats {
         assists: agg.assists + stats.assists,
         catches: agg.catches + stats.catches,
@@ -46,7 +45,7 @@ fn add_stats(
         throws: agg.throws + stats.throws,
         touchdown_passes: agg.touchdown_passes + stats.touchdown_passes,
         touchdowns: agg.touchdowns + stats.touchdowns,
-        ..agg
+        ..*agg
     }
 }
 
@@ -60,25 +59,43 @@ struct WeightedScores {
 impl WeightedScores {
     fn from_aggregate(agg: &TournamentAggregateStats) -> Self {
         Self {
-            passing: 0.03 * agg.passing_blocks as f64
-                + 11.0 * agg.touchdown_passes as f64
-                - 1.4 * agg.pass_interceptions as f64,
-            receiving: 0.09 * agg.catches as f64
-                + 0.03 * agg.receive_blocks as f64
-                + 11.0 * agg.touchdowns as f64,
-            defense: 6.0 * agg.defensive_interceptions as f64
-                + 6.0 * agg.strips as f64
-                + 0.055 * agg.damage_carrier as f64,
-            pvp: 0.085 * agg.kills as f64 + 0.015 * agg.damage_dealt,
+            passing: 0.03f64.mul_add(
+                f64::from(agg.passing_blocks),
+                11.0f64.mul_add(
+                    f64::from(agg.touchdown_passes),
+                    -1.4 * f64::from(agg.pass_interceptions),
+                ),
+            ),
+            receiving: 0.09f64.mul_add(
+                f64::from(agg.catches),
+                0.03f64.mul_add(
+                    f64::from(agg.receive_blocks),
+                    11.0 * f64::from(agg.touchdowns),
+                ),
+            ),
+            defense: 6.0f64.mul_add(
+                f64::from(agg.defensive_interceptions),
+                6.0f64.mul_add(f64::from(agg.strips), 0.055 * f64::from(agg.damage_carrier)),
+            ),
+            pvp: 0.085f64.mul_add(f64::from(agg.kills), 0.015 * agg.damage_dealt),
         }
     }
 
-    #[inline(always)]
+    fn zero() -> Self {
+        Self {
+            passing: 0.0,
+            receiving: 0.0,
+            defense: 0.0,
+            pvp: 0.0,
+        }
+    }
+
+    #[inline]
     fn offense(&self) -> f64 {
         self.passing + self.receiving
     }
 
-    #[inline(always)]
+    #[inline]
     fn total(&self) -> f64 {
         self.offense() + self.defense + self.pvp
     }
@@ -95,8 +112,8 @@ struct RatingScores {
 
 impl RatingScores {
     fn from_weighted(weighted: &WeightedScores, games: u32, avg: &WeightedScores) -> Self {
-        let gp = games as f64;
-        let bayesian = |w: f64, avg_w: f64| ((w * gp) + (avg_w * 2.0)) / (gp + 2.0);
+        let gp = f64::from(games);
+        let bayesian = |w: f64, avg_w: f64| w.mul_add(gp, avg_w * 2.0) / (gp + 2.0);
 
         Self {
             offense: bayesian(weighted.offense(), avg.offense()),
@@ -137,6 +154,17 @@ impl IndexScores {
             total: safe_div(rating.total, avg_weighted.total()),
         }
     }
+
+    fn to_player_index_scores(&self) -> PlayerIndexScores {
+        PlayerIndexScores {
+            offense: self.offense,
+            passing: self.passing,
+            receiving: self.receiving,
+            defense: self.defense,
+            pvp: self.pvp,
+            total: self.total,
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -159,8 +187,7 @@ impl Award {
         Self::Receiver,
     ];
 
-    #[inline(always)]
-    fn score(&self, idx: &IndexScores) -> f64 {
+    const fn score(self, idx: &IndexScores) -> f64 {
         match self {
             Self::Mvp => idx.total,
             Self::Opot => idx.offense,
@@ -182,22 +209,217 @@ struct AwardWinners {
     all_tournament: Vec<Uuid>,
 }
 
+fn aggregate_player_stats(
+    stats_by_match: &HashMap<u32, HashMap<Uuid, PlayerMatchStats>>,
+    match_duration_map: &HashMap<u32, u32>,
+    player_team_map: &HashMap<Uuid, i32>,
+) -> HashMap<Uuid, (TournamentAggregateStats, u32, u32)> {
+    stats_by_match
+        .iter()
+        .flat_map(|(match_id, match_stats)| {
+            let duration = match_duration_map.get(match_id).copied().unwrap_or(0);
+            match_stats
+                .iter()
+                .map(move |(uuid, stats)| (uuid, stats, duration))
+        })
+        .fold(HashMap::new(), |mut acc, (uuid, stats, duration)| {
+            let team_id = player_team_map.get(uuid).copied().unwrap_or(0);
+            let (current_agg, count, time) = acc.get(uuid).cloned().unwrap_or_else(|| {
+                (
+                    TournamentAggregateStats {
+                        team: team_id,
+                        ..Default::default()
+                    },
+                    0,
+                    0,
+                )
+            });
+            acc.insert(
+                *uuid,
+                (add_stats(&current_agg, stats), count + 1, time + duration),
+            );
+            acc
+        })
+}
+
+fn calculate_player_indexes(
+    player_aggregates: &HashMap<Uuid, (TournamentAggregateStats, u32, u32)>,
+) -> Vec<(Uuid, IndexScores)> {
+    let player_weighted: Vec<(Uuid, WeightedScores, u32)> = player_aggregates
+        .iter()
+        .map(|(uuid, (agg, games, _time))| (*uuid, WeightedScores::from_aggregate(agg), *games))
+        .collect();
+
+    let n = player_weighted.len() as f64;
+    let avg_weighted = player_weighted
+        .iter()
+        .fold(WeightedScores::zero(), |acc, (_, w, _)| WeightedScores {
+            passing: acc.passing + w.passing / n,
+            receiving: acc.receiving + w.receiving / n,
+            defense: acc.defense + w.defense / n,
+            pvp: acc.pvp + w.pvp / n,
+        });
+
+    player_weighted
+        .iter()
+        .map(|(uuid, w, games)| {
+            let rating = RatingScores::from_weighted(w, *games, &avg_weighted);
+            (*uuid, IndexScores::from_rating(&rating, &avg_weighted))
+        })
+        .collect()
+}
+
+fn determine_awards(player_indexes: &[(Uuid, IndexScores)]) -> AwardWinners {
+    let (award_map, _) = Award::PRIORITY_ORDER.iter().fold(
+        (HashMap::with_capacity(6), HashSet::with_capacity(6)),
+        |(mut map, mut awarded), &award| {
+            if let Some(uuid) = player_indexes
+                .iter()
+                .filter(|(uuid, _)| !awarded.contains(uuid))
+                .max_by(|a, b| award.score(&a.1).total_cmp(&award.score(&b.1)))
+                .map(|(uuid, _)| *uuid)
+            {
+                map.insert(award, uuid);
+                awarded.insert(uuid);
+            }
+            (map, awarded)
+        },
+    );
+
+    let all_tournament: Vec<Uuid> = {
+        let mut sorted: Vec<_> = player_indexes.iter().collect();
+        sorted.sort_unstable_by(|a, b| b.1.total.total_cmp(&a.1.total));
+        sorted.into_iter().take(5).map(|(uuid, _)| *uuid).collect()
+    };
+
+    AwardWinners {
+        mvp: award_map.get(&Award::Mvp).copied(),
+        opot: award_map.get(&Award::Opot).copied(),
+        dpot: award_map.get(&Award::Dpot).copied(),
+        oldl: award_map.get(&Award::OlDl).copied(),
+        passer: award_map.get(&Award::Passer).copied(),
+        receiver: award_map.get(&Award::Receiver).copied(),
+        all_tournament,
+    }
+}
+
+fn generate_team_response(
+    teams: &[TournamentTeam],
+    team_players: &[TournamentTeamPlayer],
+    player_aggregates: &HashMap<Uuid, (TournamentAggregateStats, u32, u32)>,
+    player_index_map: &HashMap<Uuid, &IndexScores>,
+    username_map: &HashMap<Uuid, Option<String>>,
+) -> Vec<TournamentTeamResponse> {
+    teams
+        .iter()
+        .map(|team| {
+            let captain = make_player_info(&team.captain_uuid, username_map);
+
+            let players: Vec<TournamentPlayerWithStats> = team_players
+                .iter()
+                .filter(|p| p.team_id == team.team_id)
+                .map(|p| {
+                    let (player_stats, matches_played, time_played) =
+                        player_aggregates.get(&p.player_uuid).map_or_else(
+                            || {
+                                (
+                                    TournamentAggregateStats {
+                                        team: team.team_id,
+                                        ..Default::default()
+                                    },
+                                    0,
+                                    0,
+                                )
+                            },
+                            |(agg, count, time)| (agg.clone(), *count, *time),
+                        );
+
+                    let indexes = player_index_map
+                        .get(&p.player_uuid)
+                        .map(|idx| idx.to_player_index_scores())
+                        .unwrap_or_default();
+
+                    TournamentPlayerWithStats {
+                        uuid: p.player_uuid.to_string(),
+                        username: username_map
+                            .get(&p.player_uuid)
+                            .cloned()
+                            .flatten()
+                            .unwrap_or_else(|| String::from("Unknown")),
+                        stats: player_stats,
+                        matches_played,
+                        time_played,
+                        indexes,
+                    }
+                })
+                .collect();
+
+            TournamentTeamResponse {
+                captain,
+                id: team.team_id,
+                players,
+            }
+        })
+        .collect()
+}
+
+fn generate_match_response(matches: &[TournamentMatchMapping]) -> Vec<TournamentMatchResponse> {
+    matches
+        .iter()
+        .map(|m| TournamentMatchResponse {
+            duration: m.duration,
+            match_id: m.match_id,
+            server: m.server.clone(),
+            start_time: m.start_time,
+            team_one_id: m.team_one_tournament_id,
+            team_one_score: m.team_one_score,
+            team_two_id: m.team_two_tournament_id,
+            team_two_score: m.team_two_score,
+        })
+        .collect()
+}
+
+fn generate_mvp_response(
+    awards: &AwardWinners,
+    username_map: &HashMap<Uuid, Option<String>>,
+) -> TournamentMvpResponse {
+    let to_player = |uuid: Option<Uuid>| {
+        uuid.map_or_else(
+            || TournamentPlayerInfo {
+                uuid: String::new(),
+                username: String::from("Unknown"),
+            },
+            |u| make_player_info(&u, username_map),
+        )
+    };
+
+    TournamentMvpResponse {
+        mvp: to_player(awards.mvp),
+        opot: to_player(awards.opot),
+        dpot: to_player(awards.dpot),
+        passer: to_player(awards.passer),
+        receiver: to_player(awards.receiver),
+        oldl: to_player(awards.oldl),
+    }
+}
+
 #[get("/all")]
 pub async fn get_all_tournaments(state: &State<GhastApiState>) -> Json<TournamentListApi> {
-    let tournaments = match state.database.get_tournaments_all().await {
-        Some(t) => t,
-        None => return Json(Vec::new()),
+    let Some(tournaments) = state.database.get_tournaments_all().await else {
+        return Json(Vec::new());
     };
 
     let all_captain_uuids: Vec<Uuid> = tournaments
         .iter()
-        .flat_map(|t| t.captain_uuids.iter().cloned())
+        .flat_map(|t| t.captain_uuids.iter().copied())
         .collect::<HashSet<_>>()
         .into_iter()
         .collect();
 
-    let mut lock = state.username_resolver.lock().await;
-    let username_map = lock.resolve_batch(all_captain_uuids).await;
+    let username_map = {
+        let lock = state.username_resolver.lock().await;
+        lock.resolve_batch(all_captain_uuids).await
+    };
 
     let response: Vec<TournamentListResponse> = tournaments
         .into_iter()
@@ -224,9 +446,8 @@ pub async fn get_tournament_by_id(
     tournament_id: u32,
     state: &State<GhastApiState>,
 ) -> Json<Option<TournamentDetailedResponse>> {
-    let tournament = match state.database.get_tournament_by_id(tournament_id).await {
-        Some(t) => t,
-        None => return Json(None),
+    let Some(tournament) = state.database.get_tournament_by_id(tournament_id).await else {
+        return Json(None);
     };
 
     let (teams, team_players, matches) = tokio::join!(
@@ -240,10 +461,8 @@ pub async fn get_tournament_by_id(
     let matches = matches.unwrap_or_default();
 
     let match_ids: Vec<u32> = matches.iter().map(|m| m.match_id).collect();
-    let match_duration_map: HashMap<u32, u32> = matches
-        .iter()
-        .map(|m| (m.match_id, m.duration))
-        .collect();
+    let match_duration_map: HashMap<u32, u32> =
+        matches.iter().map(|m| (m.match_id, m.duration)).collect();
     let stats_by_match = state
         .database
         .get_player_stats_for_matches(&match_ids)
@@ -255,87 +474,15 @@ pub async fn get_tournament_by_id(
         .map(|p| (p.player_uuid, p.team_id))
         .collect();
 
-    let player_aggregates: HashMap<Uuid, (TournamentAggregateStats, u32, u32)> = stats_by_match
-        .iter()
-        .flat_map(|(match_id, match_stats)| {
-            let duration = match_duration_map.get(match_id).copied().unwrap_or(0);
-            match_stats.iter().map(move |(uuid, stats)| (uuid, stats, duration))
-        })
-        .fold(HashMap::new(), |mut acc, (uuid, stats, duration)| {
-            let team_id = player_team_map.get(uuid).copied().unwrap_or(0);
-            let (current_agg, count, time) = acc
-                .get(uuid)
-                .cloned()
-                .unwrap_or_else(|| (TournamentAggregateStats { team: team_id, ..Default::default() }, 0, 0));
-            acc.insert(*uuid, (add_stats(current_agg, stats), count + 1, time + duration));
-            acc
-        });
-
-    let player_weighted: Vec<(Uuid, WeightedScores, u32)> = player_aggregates
-        .iter()
-        .map(|(uuid, (agg, games, _time))| (*uuid, WeightedScores::from_aggregate(agg), *games))
-        .collect();
-
-    let n = player_weighted.len() as f64;
-    let avg_weighted = player_weighted.iter().fold(
-        WeightedScores {
-            passing: 0.0,
-            receiving: 0.0,
-            defense: 0.0,
-            pvp: 0.0,
-        },
-        |acc, (_, w, _)| WeightedScores {
-            passing: acc.passing + w.passing / n,
-            receiving: acc.receiving + w.receiving / n,
-            defense: acc.defense + w.defense / n,
-            pvp: acc.pvp + w.pvp / n,
-        },
-    );
-
-    let player_indexes: Vec<(Uuid, IndexScores)> = player_weighted
-        .iter()
-        .map(|(uuid, w, games)| {
-            let rating = RatingScores::from_weighted(w, *games, &avg_weighted);
-            (*uuid, IndexScores::from_rating(&rating, &avg_weighted))
-        })
-        .collect();
-
+    let player_aggregates =
+        aggregate_player_stats(&stats_by_match, &match_duration_map, &player_team_map);
+    let player_indexes = calculate_player_indexes(&player_aggregates);
     let player_index_map: HashMap<Uuid, &IndexScores> = player_indexes
         .iter()
         .map(|(uuid, idx)| (*uuid, idx))
         .collect();
 
-    let (award_map, _) = Award::PRIORITY_ORDER.iter().fold(
-        (HashMap::with_capacity(6), HashSet::with_capacity(6)),
-        |(mut map, mut awarded), &award| {
-            if let Some(uuid) = player_indexes
-                .iter()
-                .filter(|(uuid, _)| !awarded.contains(uuid))
-                .max_by(|a, b| award.score(&a.1).total_cmp(&award.score(&b.1)))
-                .map(|(uuid, _)| *uuid)
-            {
-                map.insert(award, uuid);
-                awarded.insert(uuid);
-            }
-            (map, awarded)
-        },
-    );
-
-    let all_tournament: Vec<Uuid> = {
-        let mut sorted: Vec<_> = player_indexes.iter().collect();
-        sorted.sort_unstable_by(|a, b| b.1.total.total_cmp(&a.1.total));
-        sorted.into_iter().take(5).map(|(uuid, _)| *uuid).collect()
-    };
-
-    let awards = AwardWinners {
-        mvp: award_map.get(&Award::Mvp).copied(),
-        opot: award_map.get(&Award::Opot).copied(),
-        dpot: award_map.get(&Award::Dpot).copied(),
-        oldl: award_map.get(&Award::OlDl).copied(),
-        passer: award_map.get(&Award::Passer).copied(),
-        receiver: award_map.get(&Award::Receiver).copied(),
-        all_tournament,
-    };
+    let awards = determine_awards(&player_indexes);
 
     let all_uuids: HashSet<Uuid> = teams
         .iter()
@@ -350,88 +497,20 @@ pub async fn get_tournament_by_id(
         .chain(awards.all_tournament.iter().copied())
         .collect();
 
-    let mut lock = state.username_resolver.lock().await;
-    let username_map = lock.resolve_batch(all_uuids.into_iter().collect()).await;
-
-    let team_responses: Vec<TournamentTeamResponse> = teams
-        .iter()
-        .map(|team| {
-            let captain = make_player_info(&team.captain_uuid, &username_map);
-
-            let players: Vec<TournamentPlayerWithStats> = team_players
-                .iter()
-                .filter(|p| p.team_id == team.team_id)
-                .map(|p| {
-                    let (stats, matches_played, time_played) = player_aggregates
-                        .get(&p.player_uuid)
-                        .map(|(agg, count, time)| (agg.clone(), *count, *time))
-                        .unwrap_or_else(|| (TournamentAggregateStats { team: team.team_id, ..Default::default() }, 0, 0));
-
-                    let indexes = player_index_map
-                        .get(&p.player_uuid)
-                        .map(|idx| PlayerIndexScores {
-                            offense: idx.offense,
-                            passing: idx.passing,
-                            receiving: idx.receiving,
-                            defense: idx.defense,
-                            pvp: idx.pvp,
-                            total: idx.total,
-                        })
-                        .unwrap_or_default();
-
-                    TournamentPlayerWithStats {
-                        uuid: p.player_uuid.to_string(),
-                        username: username_map
-                            .get(&p.player_uuid)
-                            .cloned()
-                            .flatten()
-                            .unwrap_or_else(|| String::from("Unknown")),
-                        stats,
-                        matches_played,
-                        time_played,
-                        indexes,
-                    }
-                })
-                .collect();
-
-            TournamentTeamResponse {
-                captain,
-                id: team.team_id,
-                players,
-            }
-        })
-        .collect();
-
-    let match_responses: Vec<TournamentMatchResponse> = matches
-        .iter()
-        .map(|m| TournamentMatchResponse {
-            duration: m.duration,
-            match_id: m.match_id,
-            server: m.server.clone(),
-            start_time: m.start_time,
-            team_one_id: m.team_one_tournament_id,
-            team_one_score: m.team_one_score,
-            team_two_id: m.team_two_tournament_id,
-            team_two_score: m.team_two_score,
-        })
-        .collect();
-
-    let to_player = |uuid: Option<Uuid>| {
-        uuid.map(|u| make_player_info(&u, &username_map))
-            .unwrap_or_else(|| TournamentPlayerInfo {
-                uuid: String::new(),
-                username: String::from("Unknown"),
-            })
+    let username_map = {
+        let lock = state.username_resolver.lock().await;
+        lock.resolve_batch(all_uuids.into_iter().collect()).await
     };
 
-    let mvp_response = TournamentMvpResponse {
-        mvp: to_player(awards.mvp),
-        opot: to_player(awards.opot),
-        dpot: to_player(awards.dpot),
-        passer: to_player(awards.passer),
-        receiver: to_player(awards.receiver),
-        oldl: to_player(awards.oldl),
-    };
+    let team_responses = generate_team_response(
+        &teams,
+        &team_players,
+        &player_aggregates,
+        &player_index_map,
+        &username_map,
+    );
+    let match_responses = generate_match_response(&matches);
+    let mvp_response = generate_mvp_response(&awards, &username_map);
 
     let all_tournament_response: Vec<TournamentPlayerInfo> = awards
         .all_tournament

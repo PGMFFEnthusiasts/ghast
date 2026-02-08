@@ -14,9 +14,9 @@ pub struct UsernameResolver {
 }
 
 impl UsernameResolver {
-    pub fn create(database: Arc<Database>) -> UsernameResolver {
+    pub fn create(database: Arc<Database>) -> Self {
         let mojang_api = Arc::new(MojangApi::new());
-        UsernameResolver {
+        Self {
             loading_cache: LoadingCacheDataAccessor {
                 // loader: Arc::new(move |x| Box::pin(mojang_api.get_username_from_uuid(x))),
                 loader: Arc::new(move |x| {
@@ -25,7 +25,7 @@ impl UsernameResolver {
                 }),
                 cache: Cache::builder()
                     // 2 hrs
-                    .time_to_live(Duration::from_secs(60 * 60 * 2))
+                    .time_to_live(Duration::from_hours(2))
                     .max_capacity(2048)
                     .build(),
             },
@@ -33,7 +33,7 @@ impl UsernameResolver {
         }
     }
 
-    pub async fn resolve_batch(&mut self, uuids: Vec<Uuid>) -> HashMap<Uuid, Option<String>> {
+    pub async fn resolve_batch(&self, uuids: Vec<Uuid>) -> HashMap<Uuid, Option<String>> {
         let mut names: HashMap<Uuid, Option<String>> = HashMap::new();
 
         let mut results = {
