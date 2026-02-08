@@ -29,11 +29,9 @@ const PassPage = () => (
       <hr />
 
       <h1 class='text-secondary'>
-        <span class='text-primary'>
-          So, you've committed a Brady Faux Pas 😳...
-        </span>
+        So, you've committed a Brady Faux Pas 😳...
         {` `}
-        What happened?
+        <span class='text-primary'>What happened?</span>
       </h1>
 
       <hr />
@@ -56,19 +54,13 @@ const PassPage = () => (
       <hr />
 
       <h1 class='text-secondary'>
-        🚩 There are <span class='text-primary'>two</span> exceptions:
+        🚩 There is <span class='text-primary'>one</span> exception:
       </h1>
 
-      <ol>
-        <li>
-          The flag is stripped inside an endzone, causing a touchdown. No one
-          pass rule is required here!
-        </li>
-        <li>
-          The flag carrier is knocked by the opposing team into the endzone.
-          It's the fault of the other team for own-goaling.
-        </li>
-      </ol>
+      <p>
+        When the flag is stripped inside an endzone, it causes a touchdown. No
+        one pass rule is required here!
+      </p>
 
       <hr />
 
