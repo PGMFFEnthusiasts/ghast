@@ -1,3 +1,5 @@
+#![feature(duration_constructors)]
+
 mod db;
 mod external;
 mod util;
