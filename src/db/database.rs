@@ -80,6 +80,7 @@ impl Database {
            m.map, m.is_tourney, m.team_one_name, m.team_two_name, m.team_one_color, m.team_two_color,
            COALESCE(ARRAY_REMOVE(ARRAY_AGG(p.player), NULL), '{}'::bytea[]) players
     FROM match_data m LEFT JOIN player_match_data p ON p.match = m.match
+    WHERE m.start_time > 0
     GROUP BY m.match
     ORDER BY start_time DESC
     "#,
