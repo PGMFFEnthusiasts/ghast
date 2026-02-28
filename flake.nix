@@ -22,7 +22,7 @@
       craneLib = crane.mkLib pkgs;
     in {
       default = craneLib.buildPackage {
-        src = craneLib.cleanCargoSource ./.;
+        src = craneLib.cleanCargoSource ./api;
         buildInputs = [
           pkgs.openssl
           pkgs.pkg-config
@@ -43,7 +43,7 @@
           script;
 
         scripts = [
-          (mkScript "dev" ''docker compose up --wait -d && bacon run-long-release && docker compose down'')
+          (mkScript "dev" ''docker compose up --wait -d && cd api && bacon run-long-release && cd .. && docker compose down'')
         ];
       in
         pkgs.mkShell {
