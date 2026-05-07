@@ -75,7 +75,7 @@ impl WeightedScores {
             ),
             defense: 6.0f64.mul_add(
                 f64::from(agg.defensive_interceptions),
-                6.0f64.mul_add(f64::from(agg.strips), 0.055 * f64::from(agg.damage_carrier)),
+                6.0f64.mul_add(f64::from(agg.strips), 0.015 * f64::from(agg.damage_carrier)),
             ),
             pvp: 0.085f64.mul_add(f64::from(agg.kills), 0.015 * agg.damage_dealt),
         }
