@@ -129,10 +129,26 @@ export const Badge = (props: { name: string; quoted?: boolean }) => (
 );
 
 export const Header = () => (
-  <header class='flex flex-col gap-2'>
-    <A class='flex items-center gap-2' href='/'>
+  <header class='flex justify-between gap-2 bg-background'>
+    <A class='group flex items-center gap-2' href='/'>
       <img alt='TB Logo' class='size-12' src='/brady_logo.png' />
-      <h1 class='text-2xl font-black'>PGM Flag Football</h1>
+      <h1 class='text-2xl font-black text-white/90 transition-colors duration-200 group-hover:text-white'>
+        PGM Flag Football
+      </h1>
     </A>
+    <div class='flex items-center gap-4 text-lg font-bold'>
+      <A
+        class='text-white/85 transition-colors duration-200 hover:text-white'
+        href='/matches'
+      >
+        matches
+      </A>
+      <A
+        class='text-white/85 transition-colors duration-200 hover:text-white'
+        href='/tournaments'
+      >
+        tournaments
+      </A>
+    </div>
   </header>
 );
