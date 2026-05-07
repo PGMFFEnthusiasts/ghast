@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n    SELECT m.match, m.server, m.start_time, m.duration, m.winner, m.team_one_score, m.team_two_score,\n           m.map, m.is_tourney, m.team_one_name, m.team_two_name, m.team_one_color, m.team_two_color,\n           COALESCE(ARRAY_REMOVE(ARRAY_AGG(p.player), NULL), '{}'::bytea[]) players\n    FROM match_data m LEFT JOIN player_match_data p ON p.match = m.match\n    GROUP BY m.match\n    ORDER BY start_time DESC\n    ",
+  "query": "\n    SELECT m.match, m.server, m.start_time, m.duration, m.winner, m.team_one_score, m.team_two_score,\n           m.map, m.is_tourney, m.team_one_name, m.team_two_name, m.team_one_color, m.team_two_color,\n           COALESCE(ARRAY_REMOVE(ARRAY_AGG(p.player), NULL), '{}'::bytea[]) players\n    FROM match_data m LEFT JOIN player_match_data p ON p.match = m.match\n    WHERE m.start_time > 0\n    GROUP BY m.match\n    ORDER BY start_time DESC\n    ",
   "describe": {
     "columns": [
       {
@@ -94,5 +94,5 @@
       null
     ]
   },
-  "hash": "1d5a947311ba1d9509ba68f3df78d5cec8465a83d1f7100f40a54baa7aaec876"
+  "hash": "737f204ff331270dbb25f4a8041115213d899c33bcbb4ccb8fbdf00c07ce37a7"
 }
